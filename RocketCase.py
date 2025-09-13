@@ -75,18 +75,28 @@ class RocketCase:
           
       return X,m0List,(S1List,S2List)
 
+    def CostTrends(self,X):
+        #Input: dV Fraction (linear iter)
+        #Returns XY array of dV and cost
 
-    def stage_cost(self,m_inert_stage):
-      #Input: inert stage mass (not including payload according to problem statement)
-      #Returns the cost of the stage
-      stage_cost = 13.52*m_inert_stage**0.55
-      return stage_cost
+        #Pre-allocating the costs
+        Costs = {
+            "S1": [0] * len(X),
+            "S2": [0] * len(X),
+            "Total": [0] * len(X)
+        }
 
+        for i in range(0, len(X)):
+            #Finds Masses then calculats costs -- adding to dictionary
+            m1, m2 = self.findMasses(X[i])
+            if m1["m0"] <= 0 or m2["m0"] <= 0:
+                Costs["S1"][i] = np.nan
+                Costs["S2"][i] = np.nan
+                Costs["Total"][i] = np.nan
+            else:
+                Costs["S1"][i] = 13.52*m1["m_in"]**0.55
+                Costs["S2"][i] = 13.52*m2["m_in"]**0.55
+                Costs["Total"][i] = Costs["S1"][i] + Costs["S2"][i]
 
-    def total_cost(self,m_stage_masses):
-      #Input: array of the stage masses
-      #Returns the summed total cost of the launch vehicle
-      total_cost=0
-      for m in m_stage_masses:
-        total_cost += self.stage_cost(m)
-      return total_cost
+        return X, Costs
+
