@@ -19,7 +19,7 @@ class Solver:
     ax.grid(True)
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("m0 (Wet mass) Metric Tonnes")
-    ax.set_title("m0 vs dV Fraction")
+    ax.set_title("m0 vs dV Fraction -- %s, %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
     ax.legend()
 
     return X[minIndex],m0s[minIndex],(StageMasses[0][minIndex],StageMasses[1][minIndex]),fig
@@ -40,7 +40,7 @@ class Solver:
     ax.legend()
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("Cost $M")
-    ax.set_title("Cost vs dV Fraction")
+    ax.set_title("Cost vs dV Fraction -- %s, %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
 
 
 

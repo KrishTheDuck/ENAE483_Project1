@@ -12,6 +12,7 @@ class Engine:
     p            - Stagnation Pressure / Chamber Pressure
     NozzleRatio  - Nozzle Expansion Ratio
     Density      - Density for [oxidizer, propellant]
+    Name        - Used for plotting titles
     -------------------------------------------------------------------------------
   """
   FMMR : float
@@ -21,3 +22,4 @@ class Engine:
   p : tuple[float,float]
   NozzleRatio : tuple[float,float]
   Density : tuple[float,float]
+  Name : str #names of propellant (used for plotting)
