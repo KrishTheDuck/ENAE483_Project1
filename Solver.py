@@ -12,11 +12,15 @@ class Solver:
   #Finds the minimum mass solution and returns the X split value and the mass(es), additionally it creates a pretty plot
     X,m0s,StageMasses = self.Rocket.MassTrends(self.X)
     minIndex = np.nanargmin(m0s)
-
+    m0s = [m / 1000 for m in m0s]
     fig,ax = plt.subplots(figsize=(10,6))
-    self.__Plot(ax,X,m0s,POI=(X[minIndex],m0s[minIndex]),POI_name="Minimum Mass Point")
-    ax.set_ylabel("m0 (Wet mass) Kg")
+    ax.plot(X,m0s,label="m0")
+    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass",markersize=12)
+    ax.grid(True)
+    ax.set_xlabel("dV Fraction")
+    ax.set_ylabel("m0 (Wet mass) Metric Tonnes")
     ax.set_title("m0 vs dV Fraction")
+    ax.legend()
 
     return X[minIndex],m0s[minIndex],(StageMasses[0][minIndex],StageMasses[1][minIndex]),fig
 
@@ -42,15 +46,7 @@ class Solver:
 
     return X[minIndex],(Costs["Total"][minIndex],Costs["S1"][minIndex],Costs["S2"][minIndex]) ,(m1,m2),fig
 
-  def __Plot(self,ax,X,Y,POI=None,POI_name=None): #add Mika code vals as parameters
 
-    ax.plot(X,Y)
-    #only triggers if both POI and POI_name are provided
-    if POI is not None and POI_name is not None:
-        ax.plot(POI[0],POI[1],'ro',label=POI_name,markersize=12)
-    ax.grid(True)
-    ax.set_xlabel("dV Fraction")
-    ax.legend()
 
 
 
