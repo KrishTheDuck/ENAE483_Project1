@@ -15,7 +15,7 @@ class Solver:
     m0s = [m / 1000 for m in m0s]
     fig,ax = plt.subplots(figsize=(10,6))
     ax.plot(X,m0s,label="m0")
-    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass: %.2fkg" %(m0s[minIndex]),markersize=12)
+    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass: %.2f metric tons" %(m0s[minIndex]),markersize=12)
     ax.grid(True)
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("m0 (Wet mass) Metric Tonnes")
@@ -32,14 +32,14 @@ class Solver:
 
     fig,ax = plt.subplots(figsize=(10,6))
     # self.__Plot(ax,X,Costs,POI=(X[minIndex],Costs[minIndex]),POI_name="Minimum Cost Point")
-    ax.plot(X,Costs["Total"],label="Total Cost")
-    ax.plot(X,Costs["S1"],label="Stage 1 Cost")
-    ax.plot(X,Costs["S2"],label="Stage 2 Cost")
+    ax.plot(X,np.array(Costs["Total"])/1000,label="Total Cost")
+    ax.plot(X,np.array(Costs["S1"])/1000,label="Stage 1 Cost")
+    ax.plot(X,np.array(Costs["S2"])/1000,label="Stage 2 Cost")
     ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $%.2fB" %(Costs["Total"][minIndex]/1000))
     ax.grid(True)
     ax.legend()
     ax.set_xlabel("dV Fraction")
-    ax.set_ylabel("Cost $M")
+    ax.set_ylabel("Cost $B")
     ax.set_title("Cost vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
 
 
