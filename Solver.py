@@ -35,13 +35,12 @@ class Solver:
     ax.plot(X,Costs["Total"],label="Total Cost")
     ax.plot(X,Costs["S1"],label="Stage 1 Cost")
     ax.plot(X,Costs["S2"],label="Stage 2 Cost")
-    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $%.2fM" %(Costs["Total"][minIndex]))
+    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $%.2fB" %(Costs["Total"][minIndex]/1000))
     ax.grid(True)
     ax.legend()
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("Cost $M")
     ax.set_title("Cost vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
-
 
 
     return X[minIndex],(Costs["Total"][minIndex],Costs["S1"][minIndex],Costs["S2"][minIndex]) ,(m1,m2),fig
