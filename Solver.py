@@ -35,7 +35,7 @@ class Solver:
     ax.plot(X,Costs["Total"],label="Total Cost")
     ax.plot(X,Costs["S1"],label="Stage 1 Cost")
     ax.plot(X,Costs["S2"],label="Stage 2 Cost")
-    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $M%.2f" %(Costs["Total"][minIndex]))
+    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $%.2fM" %(Costs["Total"][minIndex]))
     ax.grid(True)
     ax.legend()
     ax.set_xlabel("dV Fraction")
