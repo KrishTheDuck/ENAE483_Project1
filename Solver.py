@@ -15,11 +15,11 @@ class Solver:
     m0s = [m / 1000 for m in m0s]
     fig,ax = plt.subplots(figsize=(10,6))
     ax.plot(X,m0s,label="m0")
-    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass",markersize=12)
+    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass: %.2fkg" %(m0s[minIndex]),markersize=12)
     ax.grid(True)
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("m0 (Wet mass) Metric Tonnes")
-    ax.set_title("m0 vs dV Fraction -- %s, %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
+    ax.set_title("m0 vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
     ax.legend()
 
     return X[minIndex],m0s[minIndex],(StageMasses[0][minIndex],StageMasses[1][minIndex]),fig
@@ -35,12 +35,12 @@ class Solver:
     ax.plot(X,Costs["Total"],label="Total Cost")
     ax.plot(X,Costs["S1"],label="Stage 1 Cost")
     ax.plot(X,Costs["S2"],label="Stage 2 Cost")
-    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost")
+    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $M%.2f" %(Costs["Total"][minIndex]))
     ax.grid(True)
     ax.legend()
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("Cost $M")
-    ax.set_title("Cost vs dV Fraction -- %s, %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
+    ax.set_title("Cost vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
 
 
 
