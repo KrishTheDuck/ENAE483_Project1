@@ -30,8 +30,13 @@ if __name__ == "__main__":
 
 
     #Example workflow for generating required plots for a Storable second stage
+    #UDMH: Mika
+    #Lox_LCH4: Eric
+    #Lox_RP1: Krish
+    #Lox_LH2: Maanav
+    #Solid: Sid
     Stage1Props = [LOX_LCH4,LOX_LH2,LOX_RP1,SOLID,N2O4_UDMH]
-    Stage2Prop = N2O4_UDMH
+    Stage2Prop = LOX_LCH4
     for i in Stage1Props:
         S2ndStage(i,Stage2Prop)
         #todo Solver function also provides stats for cost and mass plots however currently they are not being used. Modify this for the actual submission I reckon.
