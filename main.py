@@ -38,7 +38,7 @@ if __name__ == "__main__":
     LOX_LCH4  = Engine(3.6, 327, (2.26, 0.745), (2.4, 1.5), (35.16, 10.1), (34.34, 45), (1140,423),"Lox-LCH4")
     LOX_LH2   = Engine(6.03, 366, (1.86, 0.099), (2.4,2.15), (20.64, 4.2), (78, 84), (1140,71),"LOX-LH2")
     LOX_RP1   = Engine(2.72, 311, (1.92, 0.061), (3.7, 0.92), (25.8, 6.77), (37, 14.5), (1140,820),"LOX-RP1")
-    SOLID     = Engine(2.72, 311, (1.92, 0.061), (3.7, 0.92), (25.8, 6.77), (37, 14.5), (0,1680),"SOLID")
+    SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
     StageProps = [LOX_LCH4, LOX_LH2, LOX_RP1, SOLID, N2O4_UDMH]
@@ -155,8 +155,18 @@ if __name__ == "__main__":
     axm.set_ylabel('m0 (Wet mass) Metric Tonnes')
     axm.set_title('Minima of m0 for each S1/S2 combo (points colored by S1)')
     axm.grid(True)
-    axm.set_ylim(0, 30000)
-    # separate legends: color = S1, marker = S2 (placed outside)
+    # dynamic y-limits: keep all minima in view with 5% padding
+    all_m0 = [m for pts in min_mass.values() for (_, _, m) in pts]
+    if len(all_m0) > 0:
+        mmin = min(all_m0)
+        mmax = max(all_m0)
+        mrng = mmax - mmin if mmax > mmin else max(1.0, mmax*0.05)
+        ylo = max(0.0, mmin - 0.05 * mrng)
+        yhi = mmax + 0.05 * mrng
+        axm.set_ylim(ylo, yhi)
+    else:
+        axm.set_ylim(0, 30000)
+     # separate legends: color = S1, marker = S2 (placed outside)
     from matplotlib.lines import Line2D
     color_handles = [Line2D([0], [0], color=color_map_s1[name], lw=6, label=f'{name}') for name in color_map_s1]
     marker_handles = [Line2D([0], [0], color='k', marker=marker_map_s2[name], linestyle='None', markersize=8, label=f'{name}') for name in marker_map_s2]
@@ -194,7 +204,17 @@ if __name__ == "__main__":
     axc.set_ylabel('Total Cost ($B, 2025)')
     axc.set_title('Minima of Total Cost for each S1/S2 combo (points colored by S1)')
     axc.grid(True)
-    axc.set_ylim(0, 50)
+    # dynamic y-limits: keep all minima in view with 5% padding
+    all_costs = [c for pts in min_cost.values() for (_, _, c) in pts]
+    if len(all_costs) > 0:
+        cmin = min(all_costs)
+        cmax = max(all_costs)
+        crng = cmax - cmin if cmax > cmin else max(0.1, cmax*0.05)
+        clo = max(0.0, cmin - 0.05 * crng)
+        chi = cmax + 0.05 * crng
+        axc.set_ylim(clo, chi)
+    else:
+        axc.set_ylim(0, 50)
     # separate legends: color = S1, marker = S2 (placed outside)
     color_handles_c = [Line2D([0], [0], color=color_map_s1[name], lw=6, label=f'{name}') for name in color_map_s1]
     marker_handles_c = [Line2D([0], [0], color='k', marker=marker_map_s2[name], linestyle='None', markersize=8, label=f'{name}') for name in marker_map_s2]
