@@ -23,12 +23,14 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     print(f"Minimum Mass Solution:")
     print(f"  dV fraction in Stage 1 (X): {X_mass:.3f}")
     print(f"  Overall LV mass: {m0_mass:.2f} metric tonnes")
+    print(f"  LV Cost: {(R.findCost(St_mass[0]["m_in"])+R.findCost(St_mass[1]["m_in"]))/1000:.2f} B2025") #since delta1,2 are the same we can hack this to quickly return the inert mass
     print(f"Minimum Cost Solution:")
     print(f"  dV fraction in Stage 1 (X): {X_cost:.3f}")
+    print(f"  Overall LV mass: {(m1_cost["m0"])/1000:.2f} metric tonnes")
     print(f"  Overall LV cost: ${Costs[0]/1000:.2f} B2025")
     print()
 
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
@@ -46,7 +48,7 @@ if __name__ == "__main__":
     #Lox_LH2: Maanav
     #Solid: Sid
     Stage1Props = [LOX_LCH4,LOX_LH2,LOX_RP1,SOLID,N2O4_UDMH]
-    Stage2Prop = LOX_LCH4
+    Stage2Prop = N2O4_UDMH
     for i in Stage1Props:
         S2ndStage(i,Stage2Prop)
         #todo Solver function also provides stats for cost and mass plots however currently they are not being used. Modify this for the actual submission I reckon.
