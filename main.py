@@ -103,64 +103,104 @@ if __name__ == "__main__":
             cost_curves.append((label, X_c, total_cost_b, short(s1.Name), short(s2.Name)))
 
     # Plot all mass curves on one figure
-    fig_mass_all, axm = plt.subplots(figsize=(12, 8))
+    # Create scatter-of-minima plot and connect minima for each first-stage propellant
+    # Compute minima for each combo
+    min_mass = {}  # s1n -> list of (s2n, Xmin, m0min)
+    s2_order = [short(s.Name) for s in StageProps]
     for label, Xc, m0, s1n, s2n in mass_curves:
-        clr = color_map.get(s2n, 'k')
-        ls = ls_map.get(s1n, '-')
-        axm.plot(Xc, m0, label=label, color=clr, linestyle=ls)
-        # mark the minimum point if valid
-        if not np.all(np.isnan(m0)):
-            idx = np.nanargmin(m0)
-            if not np.isnan(m0[idx]):
-                axm.plot(Xc[idx], m0[idx], 'o')
-                axm.text(Xc[idx], m0[idx], f" {m0[idx]:.1f}t", fontsize=8)
+        if np.all(np.isnan(m0)):
+            continue
+        idx = int(np.nanargmin(m0))
+        Xmin = float(Xc[idx])
+        m0min = float(m0[idx])
+        min_mass.setdefault(s1n, []).append((s2n, Xmin, m0min))
+
+    # New: scatter minima colored by first-stage (common color per S1).
+    # Use marker shape to distinguish 2nd-stage props and label each point with the combo.
+    # define color per S1 and marker per S2
+    color_map_s1 = {
+        "LCH4": "tab:blue",
+        "LH2":  "tab:orange",
+        "RP1":  "tab:green",
+        "SOLID": "tab:red",
+        "N2O4/UDMH": "tab:purple"
+    }
+    marker_map_s2 = {
+        "LCH4": "o",
+        "LH2":  "s",
+        "RP1":  "^",
+        "SOLID": "D",
+        "N2O4/UDMH": "v"
+    }
+
+    fig_mass_all, axm = plt.subplots(figsize=(12, 8))
+    # plot each combo as a scatter point and connect minima for the same S1
+    # sort and connect by X to form a function-like line (no back-and-forth)
+    for s1n, pts in min_mass.items():
+        # sort by X value (dV fraction) so the connecting line is monotonic in X
+        pts_sorted = sorted(pts, key=lambda p: p[1])
+        xs = [p[1] for p in pts_sorted]
+        ys = [p[2] for p in pts_sorted]
+        clr = color_map_s1.get(s1n, 'k')
+        # draw connecting line for this first-stage using its color
+        axm.plot(xs, ys, color=clr, linestyle='-', linewidth=1, alpha=0.8)
+        # draw scatter points and label each point with numeric m0 in tonnes
+        for s2n, xval, yval in pts_sorted:
+            mkr = marker_map_s2.get(s2n, 'o')
+            axm.scatter(xval, yval, color=clr, marker=mkr, edgecolor='k', s=120)
+            # small x-offset for the text so it doesn't overlap the marker
+            axm.text(xval + 0.002, yval, f"{yval:.1f}t", fontsize=8, va='center')
 
     axm.set_xlabel('dV Fraction (Stage 1)')
     axm.set_ylabel('m0 (Wet mass) Metric Tonnes')
-    axm.set_title('All Minimum Mass Curves (m0 vs dV fraction) for 25 Propellant Combos')
+    axm.set_title('Minima of m0 for each S1/S2 combo (points colored by S1)')
     axm.grid(True)
-    # limit y-axis to 0 - 30,000 metric tonnes per user request
     axm.set_ylim(0, 30000)
-    # reduce legend clutter: smaller font and two columns
-    # main legend (all curves)
-    axm.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small', ncol=2)
-    # secondary compact legends: color = 2nd-stage, linestyle = 1st-stage
+    # separate legends: color = S1, marker = S2 (placed outside)
     from matplotlib.lines import Line2D
-    color_handles = [Line2D([0], [0], color=color_map[name], lw=4, label=f'S2: {name}') for name in color_map]
-    ls_handles = [Line2D([0], [0], color='k', linestyle=ls_map[name], lw=2, label=f'S1: {name}') for name in ls_map]
-    # place the legends outside the plot area
-    leg1 = axm.legend(handles=color_handles, loc='upper left', bbox_to_anchor=(1.02, 1.0), title='2nd-stage color', fontsize='small')
-    axm.add_artist(leg1)
-    axm.legend(handles=ls_handles, loc='lower left', bbox_to_anchor=(1.02, 0.3), title='1st-stage linestyle', fontsize='small')
+    color_handles = [Line2D([0], [0], color=color_map_s1[name], lw=6, label=f'{name}') for name in color_map_s1]
+    marker_handles = [Line2D([0], [0], color='k', marker=marker_map_s2[name], linestyle='None', markersize=8, label=f'{name}') for name in marker_map_s2]
+    leg_colors = axm.legend(handles=color_handles, loc='upper left', bbox_to_anchor=(1.02, 1.0), title='S1 (color)', fontsize='small')
+    axm.add_artist(leg_colors)
+    axm.legend(handles=marker_handles, loc='lower left', bbox_to_anchor=(1.02, 0.3), title='S2 (marker)', fontsize='small')
     fig_mass_all.tight_layout()
 
-    # Plot all total-cost curves on one figure
-    fig_cost_all, axc = plt.subplots(figsize=(12, 8))
+    # Plot minima of total cost for each combo and connect minima by first-stage
+    min_cost = {}  # s1n -> list of (s2n, Xmin, costmin)
     for label, Xc, cost_b, s1n, s2n in cost_curves:
-        clr = color_map.get(s2n, 'k')
-        ls = ls_map.get(s1n, '-')
-        axc.plot(Xc, cost_b, label=label, color=clr, linestyle=ls)
-        # mark the minimum cost point if valid
-        if not np.all(np.isnan(cost_b)):
-            idx = np.nanargmin(cost_b)
-            if not np.isnan(cost_b[idx]):
-                axc.plot(Xc[idx], cost_b[idx], 'o')
-                axc.text(Xc[idx], cost_b[idx], f" ${cost_b[idx]:.2f}B", fontsize=8)
+        if np.all(np.isnan(cost_b)):
+            continue
+        idx = int(np.nanargmin(cost_b))
+        Xmin = float(Xc[idx])
+        cmin = float(cost_b[idx])
+        min_cost.setdefault(s1n, []).append((s2n, Xmin, cmin))
+
+    fig_cost_all, axc = plt.subplots(figsize=(12, 8))
+    # plot each combo as a scatter point and connect minima for the same S1
+    for s1n, pts in min_cost.items():
+        pts_sorted = sorted(pts, key=lambda p: p[1])
+        xs = [p[1] for p in pts_sorted]
+        ys = [p[2] for p in pts_sorted]
+        clr = color_map_s1.get(s1n, 'k')
+        # draw connecting line for this first-stage using its color
+        axc.plot(xs, ys, color=clr, linestyle='-', linewidth=1, alpha=0.8)
+        for s2n, xval, yval in pts_sorted:
+            mkr = marker_map_s2.get(s2n, 'o')
+            axc.scatter(xval, yval, color=clr, marker=mkr, edgecolor='k', s=120)
+            # label each marker with cost in billions (small x-offset)
+            axc.text(xval + 0.002, yval, f"${yval:.2f}B", fontsize=8, va='center')
 
     axc.set_xlabel('dV Fraction (Stage 1)')
     axc.set_ylabel('Total Cost ($B, 2025)')
-    axc.set_title('All Total Cost Curves (Total Cost vs dV fraction) for 25 Propellant Combos')
+    axc.set_title('Minima of Total Cost for each S1/S2 combo (points colored by S1)')
     axc.grid(True)
-    # limit y-axis to 0 - 50 billion dollars per user request
     axc.set_ylim(0, 50)
-    # reduce legend clutter: smaller font and two columns
-    axc.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small', ncol=2)
-    # add color and linestyle legends for the cost plot as well
-    color_handles_c = [Line2D([0], [0], color=color_map[name], lw=4, label=f'S2: {name}') for name in color_map]
-    ls_handles_c = [Line2D([0], [0], color='k', linestyle=ls_map[name], lw=2, label=f'S1: {name}') for name in ls_map]
-    leg1c = axc.legend(handles=color_handles_c, loc='upper left', bbox_to_anchor=(1.02, 1.0), title='2nd-stage color', fontsize='small')
-    axc.add_artist(leg1c)
-    axc.legend(handles=ls_handles_c, loc='lower left', bbox_to_anchor=(1.02, 0.3), title='1st-stage linestyle', fontsize='small')
+    # separate legends: color = S1, marker = S2 (placed outside)
+    color_handles_c = [Line2D([0], [0], color=color_map_s1[name], lw=6, label=f'{name}') for name in color_map_s1]
+    marker_handles_c = [Line2D([0], [0], color='k', marker=marker_map_s2[name], linestyle='None', markersize=8, label=f'{name}') for name in marker_map_s2]
+    leg_colors_c = axc.legend(handles=color_handles_c, loc='upper left', bbox_to_anchor=(1.02, 1.0), title='S1 (color)', fontsize='small')
+    axc.add_artist(leg_colors_c)
+    axc.legend(handles=marker_handles_c, loc='lower left', bbox_to_anchor=(1.02, 0.3), title='S2 (marker)', fontsize='small')
     fig_cost_all.tight_layout()
 
     # Show both figures
