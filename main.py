@@ -15,8 +15,19 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     Sol = S.Solver(R)
 
     #SOlutions
-    X, m0, St, fig = Sol.MinimumMass()  # returns minimum mass solution (with plot)
-    Xm,Costs,(m1,m2),fig = Sol.MinimumCost() #returns minimum cost solution (with plot)
+    X_mass, m0_mass, St_mass, fig_mass = Sol.MinimumMass()  # returns minimum mass solution (with plot)
+    X_cost, Costs, (m1_cost, m2_cost), fig_cost = Sol.MinimumCost() #returns minimum cost solution (with plot)
+
+    # Print summary for this propellant combo
+    print(f"--- S1: {Stage1Prop.Name}, S2: {Stage2Prop.Name} ---")
+    print(f"Minimum Mass Solution:")
+    print(f"  dV fraction in Stage 1 (X): {X_mass:.3f}")
+    print(f"  Overall LV mass: {m0_mass:.2f} metric tonnes")
+    print(f"Minimum Cost Solution:")
+    print(f"  dV fraction in Stage 1 (X): {X_cost:.3f}")
+    print(f"  Overall LV cost: ${Costs[0]/1000:.2f} B2025")
+    print()
+
     plt.show()
 
 
@@ -26,7 +37,6 @@ if __name__ == "__main__":
     LOX_RP1   = Engine(2.72, 311, (1.92, 0.061), (3.7, 0.92), (25.8, 6.77), (37, 14.5), (1140,820),"LOX-RP1")
     SOLID     = Engine(2.72, 311, (1.92, 0.061), (3.7, 0.92), (25.8, 6.77), (37, 14.5), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N204-UDMH (Storables)")
-
 
 
     #Example workflow for generating required plots for a Storable second stage
@@ -40,7 +50,3 @@ if __name__ == "__main__":
     for i in Stage1Props:
         S2ndStage(i,Stage2Prop)
         #todo Solver function also provides stats for cost and mass plots however currently they are not being used. Modify this for the actual submission I reckon.
-
-
-
-

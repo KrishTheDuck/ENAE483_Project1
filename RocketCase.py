@@ -100,3 +100,8 @@ class RocketCase:
 
         return X, Costs
 
+    def findCost(self,m_in):
+        #Input: dV Fraction, Inert Mass
+        #Returns cost of the rocket
+        return 13.52*m_in**0.55
+
