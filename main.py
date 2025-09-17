@@ -30,7 +30,7 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     print(f"  Overall LV cost: ${Costs[0]/1000:.2f} B2025")
     print()
 
-    # plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":
