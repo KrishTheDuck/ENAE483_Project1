@@ -59,36 +59,40 @@ class RocketCase:
       # ISP1 = self.engines[0].Isp1 #I'm not sure how to engines class is defined but this is where I'd extract the useful parameters
       # ISP2 = self.engines[1].Isp2
 
-      m0List = [0] * len(X) #pre-allocating the masses
+      # pre-allocate as float array filled with NaN to avoid type warnings
+      m0List = np.full(len(X), np.nan, dtype=float)
       S1List = []
       S2List = []
-      for i in range(0,len(X)):
-        m1,m2 = self.findMasses(X[i])
+      for i, xi in enumerate(X):
+        m1,m2 = self.findMasses(xi)
         S1List.append(m1)
         S2List.append(m2)
 
-      #valid number check (because there is a "maximum" deltaV a astage can provide)
-        if S1List[i]["m0"] <= 0:
+        # valid number check (because there is a "maximum" deltaV a stage can provide)
+        try:
+          if m1["m0"] > 0:
+            m0List[i] = m1["m0"]
+          else:
+            m0List[i] = np.nan
+        except Exception:
           m0List[i] = np.nan
-        else:
-          m0List[i] = S1List[i]["m0"]
-          
+
       return X,m0List,(S1List,S2List)
 
     def CostTrends(self,X):
         #Input: dV Fraction (linear iter)
         #Returns XY array of dV and cost
 
-        #Pre-allocating the costs
+        #Pre-allocating the costs as float arrays to allow np.nan
         Costs = {
-            "S1": [0] * len(X),
-            "S2": [0] * len(X),
-            "Total": [0] * len(X)
+            "S1": np.full(len(X), np.nan, dtype=float),
+            "S2": np.full(len(X), np.nan, dtype=float),
+            "Total": np.full(len(X), np.nan, dtype=float)
         }
 
-        for i in range(0, len(X)):
+        for i, xi in enumerate(X):
             #Finds Masses then calculats costs -- adding to dictionary
-            m1, m2 = self.findMasses(X[i])
+            m1, m2 = self.findMasses(xi)
             if m1["m0"] <= 0 or m2["m0"] <= 0:
                 Costs["S1"][i] = np.nan
                 Costs["S2"][i] = np.nan
@@ -104,4 +108,3 @@ class RocketCase:
         #Input: dV Fraction, Inert Mass
         #Returns cost of the rocket
         return 13.52*m_in**0.55
-
