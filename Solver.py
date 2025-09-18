@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.ticker as ticker
 
 #first stage delta V fraction vs mass
 
@@ -15,12 +16,17 @@ class Solver:
     m0s = [m / 1000 for m in m0s]
     fig,ax = plt.subplots(figsize=(10,6))
     ax.plot(X,m0s,label="m0")
-    ax.plot(X[minIndex],m0s[minIndex],'ro',label="Minimum mass: %.2f metric tons" %(m0s[minIndex]),markersize=12)
+    # show minimum with 3 significant figures
+    ax.plot(X[minIndex],m0s[minIndex],'ro',label=f"Minimum mass: {m0s[minIndex]:.3g} metric tons",markersize=12)
     ax.grid(True)
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("m0 (Wet mass) Metric Tonnes")
     ax.set_title("m0 vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
     ax.legend()
+
+    # format axis tick labels to 3 significant figures
+    ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.3g}'))
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.3g}'))
 
     return X[minIndex],m0s[minIndex],(StageMasses[0][minIndex],StageMasses[1][minIndex]),fig
 
@@ -30,23 +36,31 @@ class Solver:
     minIndex = np.nanargmin(Costs["Total"])
     m1,m2 = self.Rocket.findMasses(X[minIndex]) #gets masses at minimum. prolly useful
 
+    # extract costs at the minimum index and format for legend
+    total_min = Costs["Total"][minIndex]
+    s1_min = Costs["S1"][minIndex]
+    s2_min = Costs["S2"][minIndex]
+
+    # convert lists to numpy arrays before scaling
+    total_arr = np.array(Costs["Total"]) / 1000
+    s1_arr = np.array(Costs["S1"]) / 1000
+    s2_arr = np.array(Costs["S2"]) / 1000
+
     fig,ax = plt.subplots(figsize=(10,6))
-    # self.__Plot(ax,X,Costs,POI=(X[minIndex],Costs[minIndex]),POI_name="Minimum Cost Point")
-    ax.plot(X,np.array(Costs["Total"])/1000,label="Total Cost")
-    ax.plot(X,np.array(Costs["S1"])/1000,label="Stage 1 Cost")
-    ax.plot(X,np.array(Costs["S2"])/1000,label="Stage 2 Cost")
-    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label="Minimum cost: $%.2fB" %(Costs["Total"][minIndex]/1000))
+    # include min values (3 sig figs) in the legend labels
+    ax.plot(X, total_arr, label=f"Total Cost (min {total_min/1000:.3g} B)")
+    ax.plot(X, s1_arr, label=f"Stage 1 Cost ({s1_min/1000:.3g} B)")
+    ax.plot(X, s2_arr, label=f"Stage 2 Cost ({s2_min/1000:.3g} B)")
+    # label the vertical line with 3 significant figures for the cost value
+    ax.axvline(X[minIndex], color='r', linestyle='--', linewidth=2,label=f"Minimum cost: ${total_min/1000:.3g}B")
     ax.grid(True)
     ax.legend()
     ax.set_xlabel("dV Fraction")
     ax.set_ylabel("Cost $B")
     ax.set_title("Cost vs dV Fraction -- S1: %s, S2: %s" %(self.Rocket.engines[0].Name,self.Rocket.engines[1].Name))
 
+    # format axis tick labels to 3 significant figures
+    ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.3g}'))
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.3g}'))
 
     return X[minIndex],(Costs["Total"][minIndex],Costs["S1"][minIndex],Costs["S2"][minIndex]) ,(m1,m2),fig
-
-
-
-
-
-

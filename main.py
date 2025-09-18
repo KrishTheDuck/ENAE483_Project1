@@ -1,7 +1,6 @@
 from Engine import Engine
 from RocketCase import RocketCase
 import matplotlib.pyplot as plt
-import numpy as np
 import Solver as S
 
 def S2ndStage(Stage1Prop,Stage2Prop):
@@ -21,13 +20,14 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     # Print summary for this propellant combo
     print(f"--- S1: {Stage1Prop.Name}, S2: {Stage2Prop.Name} ---")
     print(f"Minimum Mass Solution:")
-    print(f"  dV fraction in Stage 1 (X): {X_mass:.3f}")
-    print(f"  Overall LV mass: {m0_mass:.2f} metric tonnes")
-    print(f"  LV Cost: {(R.findCost(St_mass[0]["m_in"])+R.findCost(St_mass[1]["m_in"]))/1000:.2f} B2025") #since delta1,2 are the same we can hack this to quickly return the inert mass
+    print(f"  dV fraction in Stage 1 (X): {X_mass:.3g}")
+    print(f"  Overall LV mass: {m0_mass:.3g} metric tonnes")
+    total_cost_mass = (R.findCost(St_mass[0]["m_in"]) + R.findCost(St_mass[1]["m_in"]))/1000
+    print(f"  LV Cost: {total_cost_mass:.3g} B2025")
     print(f"Minimum Cost Solution:")
-    print(f"  dV fraction in Stage 1 (X): {X_cost:.3f}")
-    print(f"  Overall LV mass: {(m1_cost["m0"])/1000:.2f} metric tonnes")
-    print(f"  Overall LV cost: ${Costs[0]/1000:.2f} B2025")
+    print(f"  dV fraction in Stage 1 (X): {X_cost:.3g}")
+    print(f"  Overall LV mass: {(m1_cost['m0'])/1000:.3g} metric tonnes")
+    print(f"  Overall LV cost: ${Costs[0]/1000:.3g} B2025")
     print()
 
     plt.show()
