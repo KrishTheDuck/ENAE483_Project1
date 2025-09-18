@@ -1,11 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
-# first stage delta V fraction vs mass
-
+from RocketCase import RocketCase
 
 class Solver:
-    def __init__(self, RocketCaseObject):
+    """Solver class that plots the mass and cost trends, and the associated minimal values"""
+
+    def __init__(self, RocketCaseObject : RocketCase):
+        """
+        :param RocketCaseObject: RocketCaseObject
+        :type RocketCaseObject: RocketCaseObject
+        """
+        
         self.RocketCaseObject = RocketCaseObject
         self.X, self.m0s, self.StageMasses = self.RocketCaseObject.MassTrends(
             np.linspace(0.35, 0.65, 61)
@@ -13,7 +18,12 @@ class Solver:
         _, self.Costs = self.RocketCaseObject.CostTrends(self.X)
 
     def PlotMinimumMass(self):
-        # Finds the minimum mass solution and returns the X split value and the mass(es), additionally it creates a pretty plot
+        """Plots the minimum mass determined from the RocketCase object.
+        
+        :returns: the Delta-V fraction that yielded the minimal mass, the minimal mass, the stage 1 and stage 2 mass proportion dictionaries, and the figure plotted.
+        :rtype: Tuple[float, float, Tuple[Dict[str,float], Dict[str,float]], Figure]
+        """
+        
         minIndex = np.nanargmin(self.m0s)
         m0s = [m / 1000 for m in self.m0s]
 
@@ -23,7 +33,7 @@ class Solver:
             self.X[minIndex],
             m0s[minIndex],
             "ro",
-            label="Minimum mass: %.2fkg" % (m0s[minIndex]),
+            label=f"Minimum mass: {m0s[minIndex]:2f}kg",
             markersize=12,
         )
         ax.grid(True)
@@ -42,6 +52,12 @@ class Solver:
         )
 
     def PlotMinimumCost(self):
+        """Plots the minimum cost determined from the RocketCase object.
+        
+        :returns: the Delta-V fraction that yielded the minimal cost, the cost of each stage, the masses of each stage, and the figure plotted.
+        :rtype: Tuple[float, Tuple[float,float,float], Tuple[float,float], Figure]
+        """
+        
         # finds the minimum cost solution and returns the X split value and the cost, additionally it creates a pretty plot
         minIndex = np.nanargmin(self.Costs["Total"])
         m1, m2 = self.RocketCaseObject.findMasses(

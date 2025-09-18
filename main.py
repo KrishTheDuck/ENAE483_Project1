@@ -73,12 +73,12 @@ if __name__ == "__main__":
         "LOX-RP1",
     )
     SOLID = Engine(
-        2.72,
-        311,
-        (1.92, 0.061),
-        (3.7, 0.92),
+        np.nan,
+        269,
+        (4.5, 2.94),
+        (6.6, 2.34),
         (25.8, 6.77),
-        (37, 14.5),
+        (10.5, 5),
         (0, 1680),
         "SOLID",
     )
@@ -94,12 +94,7 @@ if __name__ == "__main__":
     )
 
     StageProps = [LOX_LCH4, LOX_LH2, LOX_RP1, SOLID, N2O4_UDMH]
-    Stage1Props = [LOX_LCH4,LOX_LH2,LOX_RP1,SOLID,N2O4_UDMH]
-    Stage2Prop = N2O4_UDMH
-    for i in Stage1Props:
-        S2ndStage(i,Stage2Prop)
     
-    pass
     # Parameters used across cases
     dVtot = 12.3e3
     mPL = 26000
@@ -112,7 +107,7 @@ if __name__ == "__main__":
 
     # helper to create compact labels for the legend to reduce clutter
     short_names = {
-        "Lox-LCH4": "LCH4",
+        "LOX-LCH4": "LCH4",
         "LOX-LH2": "LH2",
         "LOX-RP1": "RP1",
         "SOLID": "SOLID",

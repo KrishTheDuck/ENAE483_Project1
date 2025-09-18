@@ -84,11 +84,11 @@ class RocketCase:
         }  # dict with stage 1 mass values
         return Mass1, Mass2
 
-    def MassTrends(self, X: list[float]):
+    def MassTrends(self, X: np.ndarray):
         """Returns the mass trends given a list of Delta-V fractions.
 
         :param X: List of percents of DeltaV to allocate to the first stage. Second stage allocation is 1-X.
-        :type X: list[float]
+        :type X: np.ndarray
 
         :returns: X, total masses, and a list of stage 1 and stage 2 masses for a certain Delta-V fraction
         :rtype: Tuple[list[float], list[float], Tuple[list[Dict[str,float]]], list[Dict[str,float]]]
