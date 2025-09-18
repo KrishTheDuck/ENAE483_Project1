@@ -6,7 +6,7 @@ import numpy as np
 class Solver:
   def __init__(self, RocketCase):
     self.Rocket = RocketCase
-    self.X = np.linspace(0.01,0.99,98) #1%->99% with 1% intervals for the X split
+    self.X = np.linspace(0.01,0.99,1500) #1%->99% with 1% intervals for the X split
 
   def MinimumMass(self):
   #Finds the minimum mass solution and returns the X split value and the mass(es), additionally it creates a pretty plot
