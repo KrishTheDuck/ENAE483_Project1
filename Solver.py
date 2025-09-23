@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from RocketCase import RocketCase
+from matplotlib.ticker import FuncFormatter
 
 class Solver:
     """Solver class that plots the mass and cost trends, and the associated minimal values"""
@@ -33,7 +34,7 @@ class Solver:
             self.X[minIndex],
             m0s[minIndex],
             "ro",
-            label=f"Minimum mass: {m0s[minIndex]:2f}kg",
+            label=f"Minimum mass: {m0s[minIndex]:.3g}t",
             markersize=12,
         )
         ax.grid(True)
@@ -42,6 +43,9 @@ class Solver:
         ax.set_title(
             f"m0 vs dV Fraction -- S1: {self.RocketCaseObject.engines[0].Name}, S2: {self.RocketCaseObject.engines[1].Name}"
         )
+        # Format axis ticks to 3 sig figs
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.3g}"))
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda y, _: f"{y:.3g}"))
         ax.legend()
 
         return (
@@ -74,9 +78,12 @@ class Solver:
             color="r",
             linestyle="--",
             linewidth=2,
-            label=f"Minimum cost: ${self.Costs['Total'][minIndex]:.2f}M",
+            label=f"Minimum cost: ${self.Costs['Total'][minIndex]:.3g}M",
         )
         ax.grid(True)
+        # Format axis ticks to 3 sig figs
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.3g}"))
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda y, _: f"{y:.3g}"))
         ax.legend()
         ax.set_xlabel("dV Fraction")
         ax.set_ylabel("Cost $M")

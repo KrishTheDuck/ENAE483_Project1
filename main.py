@@ -3,6 +3,7 @@ from RocketCase import RocketCase
 import matplotlib.pyplot as plt
 import numpy as np
 import Solver as S
+from matplotlib.ticker import FuncFormatter
 
 
 def S2ndStage(Stage1Prop, Stage2Prop):
@@ -204,7 +205,7 @@ if __name__ == "__main__":
             mkr = marker_map_s2.get(s2n, "o")
             axm.scatter(xval, yval, color=clr, marker=mkr, edgecolor="k", s=120)
             # small x-offset for the text so it doesn't overlap the marker
-            axm.text(xval + 0.002, yval, f"{yval:.1f}t", fontsize=8, va="center")
+            axm.text(xval + 0.002, yval, f"{yval:.3g}t", fontsize=8, va="center")
 
     axm.set_xlabel("dV Fraction (Stage 1)")
     axm.set_ylabel("m0 (Wet mass) Metric Tonnes")
@@ -221,7 +222,10 @@ if __name__ == "__main__":
         axm.set_ylim(ylo, yhi)
     else:
         axm.set_ylim(0, 30000)
-     # separate legends: color = S1, marker = S2 (placed outside)
+    # Format axis ticks to 3 sig figs
+    axm.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.3g}"))
+    axm.yaxis.set_major_formatter(FuncFormatter(lambda y, _: f"{y:.3g}"))
+    # separate legends: color = S1, marker = S2 (placed outside)
     from matplotlib.lines import Line2D
 
     color_handles = [
@@ -280,7 +284,7 @@ if __name__ == "__main__":
             mkr = marker_map_s2.get(s2n, "o")
             axc.scatter(xval, yval, color=clr, marker=mkr, edgecolor="k", s=120)
             # label each marker with cost in billions (small x-offset)
-            axc.text(xval + 0.002, yval, f"${yval:.2f}B", fontsize=8, va="center")
+            axc.text(xval + 0.002, yval, f"${yval:.3g}B", fontsize=8, va="center")
 
     axc.set_xlabel("dV Fraction (Stage 1)")
     axc.set_ylabel("Total Cost ($B, 2025)")
@@ -297,6 +301,9 @@ if __name__ == "__main__":
         axc.set_ylim(clo, chi)
     else:
         axc.set_ylim(0, 50)
+    # Format axis ticks to 3 sig figs
+    axc.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.3g}"))
+    axc.yaxis.set_major_formatter(FuncFormatter(lambda y, _: f"{y:.3g}"))
     # separate legends: color = S1, marker = S2 (placed outside)
     color_handles_c = [
         Line2D([0], [0], color=color_map_s1[name], lw=6, label=f"{name}")
