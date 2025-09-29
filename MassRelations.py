@@ -64,6 +64,15 @@ class MassRelations:
                 self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type
             )
         )
+            
+        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, \
+            self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = (
+            MassRelations.__get_tank_masses(
+                self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type
+            )
+        )
+            
+        
 
     @staticmethod
     def __get_propellants(name: str):
