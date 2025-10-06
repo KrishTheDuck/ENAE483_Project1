@@ -31,7 +31,8 @@ class MassRelations:
 
     """
 
-    def __init__(self, X, R: RocketCase):
+    def __init__(self, X, R: RocketCase,D_outer = 4):
+        self.D_outer = D_outer #m, outer radius of the rocket, assumed constant for both stages
         self.R = R
         self.X = X
 
@@ -58,20 +59,15 @@ class MassRelations:
         s1_ox_type, s1_fuel_type = MassRelations.__get_propellants(R.engines[0].Name)
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
 
-        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, \
-            self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = (
-            MassRelations.__get_tank_masses(
-                self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type
-            )
+        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = (
+            MassRelations.__get_tank_masses(self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type)
         )
             
-        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, \
-            self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = (
-            MassRelations.__get_tank_masses(
-                self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type
-            )
+        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = (
+            MassRelations.__get_tank_masses(self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type)
         )
-            
+
+
         
 
     @staticmethod
@@ -84,22 +80,33 @@ class MassRelations:
             # No dash: only fuel present
             return None, name
 
-    @staticmethod
-    def __get_tank_masses(Masses, E: Engine, ox_type, fuel_type):
-        ox_tank = 0.0107 * Masses["m_ox"]
 
+    def __get_tank_masses(self,Masses, E: Engine, ox_type, fuel_type):
         # add n2o4 optimization?
-        ox_tank_r = ((Masses["m_ox"] / E.Density[0]) / (4 * np.pi / 3)) ^ (1 / 3)
-        fu_tank_r = ((Masses["m_fu"] / E.Density[1]) / (4 * np.pi / 3)) ^ (1 / 3)
+        ox_tank_l = (4/(np.pi*self.D_outer^2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
+        fu_tank_l = (4/(np.pi*self.D_outer^2))*(Masses["m_fu"] / E.Density[1]) + (2/3)*self.D_outer #cylindrical tank length
 
-        Area_Ox = 4 * np.pi * ox_tank_r ^ 2
-        Area_Fu = 4 * np.pi * fu_tank_r ^ 2
+        Area_Ox = np.pi * self.D_outer * ox_tank_l + np.pi * self.D_outer ^ 2 #surface area of cylinder + 2 hemispheres
+        Area_Fu = np.pi * self.D_outer * fu_tank_l + np.pi * self.D_outer ^ 2 #surface area of cylinder + 2 hemispheres
 
-        ox_insulation = 1.123 * Area_Ox
+        match ox_type:
+            case "LOX":
+                ox_tank = 0.0107 * Masses["m_ox"]
+                ox_insulation = 1.123 * Area_Ox #from MERS slides -- only for LOX
+            case "N2O4":
+                #Hypergolic case -- annoying a fx of Prop volume not tank area
+                ox_tank = 12.16*(Masses["m_ox"] / E.Density[0])  #MERS slide 7
+                ox_insulation = np.nan
+            case None:
+                #Solid only
+                ox_tank = np.nan
+                ox_insulation = np.nan
+            case _:
+                raise ValueError(f'Oxidizer "{ox_type}" not found')
 
         match fuel_type:
             case "LH2":
-                fu_tank = 0.128 * Masses["m_fu"]
+                fu_tank = 0.128 * Masses["m_fu"] #why this formula? Do we want to consider Ti or COPV tanks?
                 fu_insulation = 2.880 * Area_Fu
             case "RP1":
                 fu_tank = 0.0148 * Masses["m_fu"]
@@ -111,12 +118,33 @@ class MassRelations:
                 fu_tank = Masses["m_fu"] * 0.135
                 fu_insulation = np.nan
             case "UDMH":
-                fu_tank = np.nan  # how do i do udmh???
+                fu_tank = 12.16*(Masses["m_fu"] / E.Density[1])  #MERS slide 7
                 fu_insulation = np.nan
             case _:
                 raise ValueError(f'Fuel "{fuel_type}" not found')
 
         return ox_tank, ox_insulation, fu_tank, fu_insulation
+
+    def __getPropulsion_Sys_Mass(self, E: Engine, Masses):
+        #M_engine = f(Thrust,Ae,At) Liquid
+        #M_casing = f(M_prop) Solid
+        #M_thrust_struct = f(Thrust) Both
+
+        #Lambda functions for the mass relations
+        M_engine = lambda T,NozzleRatio: 7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59 #kg, MERS slide 27
+        M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
+        M_thrust_struct = lambda T: 2.55e-4 * T #kg, MERS slide 27
+        M_gimbals = lambda T,P0: 237.8 * (T/P0)^(0.9375) #kg, MERS slide 28
+
+        #todo working on this rn
+        match E.Name:
+            case "SOLID":
+                pass
+            case _:
+                pass
+
+
+        return M_rocket_engine, M_casing, M_thrust_struct, M_gimbals
 
     # Suppose we have the tanks as spheres here.
     # if ox_tank_r is not np.nan:
