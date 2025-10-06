@@ -32,7 +32,7 @@ class MassRelations:
     """
 
     def __init__(self, X, R: RocketCase,D_outer = 4):
-        self.D_outer = D_outer #m, outer radius of the rocket, assumed constant for both stages
+        self.D_outer = D_outer #m, outer diameter of the rocket, assumed constant for both stages
         self.R = R
         self.X = X
 
@@ -59,30 +59,18 @@ class MassRelations:
         s1_ox_type, s1_fuel_type = MassRelations.__get_propellants(R.engines[0].Name)
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
 
-        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = (
+        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = \
             MassRelations.__get_tank_masses(self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type)
-        )
+        
             
-        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = (
+        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = \
             MassRelations.__get_tank_masses(self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type)
-        )
-        
-        
 
-        
+    
+        return 0
 
-    @staticmethod
-    def __get_propellants(name: str):
-        # Split the propellant name into oxidizer and fuel
-        if "-" in name:
-            oxidizer, fuel = name.split("-", 1)
-            return oxidizer, fuel
-        else:
-            # No dash: only fuel present
-            return None, name
-
-
-    def __get_tank_masses(self,Masses, E: Engine, ox_type, fuel_type):
+            
+    def __get_tank_masses(self, Masses, E: Engine, ox_type, fuel_type):
         # add n2o4 optimization?
         ox_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
         fu_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_fu"] / E.Density[1]) + (2/3)*self.D_outer #cylindrical tank length
@@ -126,10 +114,39 @@ class MassRelations:
 
         return ox_tank, ox_insulation, fu_tank, fu_insulation
 
-    def __avionics_mass(self, M0):
+
+    @staticmethod
+    def __get_propellants(name: str):
+        # Split the propellant name into oxidizer and fuel
+        if "-" in name:
+            oxidizer, fuel = name.split("-", 1)
+            return oxidizer, fuel
+        else:
+            # No dash: only fuel present
+            return None, name
+
+    @staticmethod
+    def __aft_fairing_area(D_outer, h):
+        #Assume cylinder fairing
+        return 2 * np.pi * D_outer * h
+
+    @staticmethod
+    def __interstage_fairing_area(r1, r2, h):
+        #Assume frustrum fairing
+        return np.pi * (r1 + r2) * np.sqrt((r1-r2)** 2 + h**2)
+
+    @staticmethod
+    def __payload_fairing_area(D_outer, h):
+        #Assume conical fairing
+        return np.pi * D_outer * np.sqrt((D_outer/2)**2 + h**2)
+    
+    @staticmethod
+    def __avionics_mass(M0):
         #Avionics mass as a function of gross mass
         return 10 * M0 ** 0.361
-    def __wiring_mass(self, M0, TotalLength):
+    
+    @staticmethod
+    def __wiring_mass(M0, TotalLength):
         #Wiring mass as a function of gross mass
         return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
     
