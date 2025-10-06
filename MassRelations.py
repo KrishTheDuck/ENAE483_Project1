@@ -132,9 +132,9 @@ class MassRelations:
             return None, name
 
     @staticmethod
-    def __aft_fairing_area(D_outer, h):
+    def __aft_fairing_area(D_outer, r_f):
         #Assume cylinder fairing
-        return 2 * np.pi * D_outer * h
+        return 2 * np.pi * D_outer * (r_f + 3) #3m for engine length
 
     @staticmethod
     def __interstage_fairing_area(r1, r2, h):
