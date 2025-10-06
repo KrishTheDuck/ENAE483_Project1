@@ -30,6 +30,12 @@ class MassRelations:
     accommodate the engines. Assume the engines are 3m long
 
     """
+    @property
+    def payload_diameter(self):
+        return 5.2 
+    @property
+    def payload_height(self):
+        return 13
 
     def __init__(self, X, R: RocketCase,D_outer = 4):
         self.D_outer = D_outer #m, outer diameter of the rocket, assumed constant for both stages
@@ -136,9 +142,22 @@ class MassRelations:
         return np.pi * (r1 + r2) * np.sqrt((r1-r2)** 2 + h**2)
 
     @staticmethod
-    def __payload_fairing_area(D_outer, h):
+    def __payload_fairing_area(D_outer, r_ox, r_f):
+        # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
+        RocketRadius = max(r_ox,r_f,D_outer/2)
+        
+        rc = MassRelations.payload_diameter / 2 # m, radius of the payload
+        h = (r_ox + MassRelations.payload_height)        # m, height of the payload
+        
+        h1 = (h * rc) / (RocketRadius - rc)
+        
         #Assume conical fairing
-        return np.pi * D_outer * np.sqrt((D_outer/2)**2 + h**2)
+        return np.pi * D_outer * np.sqrt((D_outer/2)**2 + (h+h1)**2)
+    
+    @staticmethod
+    def __fairing_mass(area):
+        #Fairing mass as a function of area
+        return 4.95 * area ** 1.15
     
     @staticmethod
     def __avionics_mass(M0):
@@ -170,21 +189,3 @@ class MassRelations:
 
 
         return M_rocket_engine, M_casing, M_thrust_struct, M_gimbals
-
-    # Suppose we have the tanks as spheres here.
-    # if ox_tank_r is not np.nan:
-    # To make it aerodynamic we need to find the best cone shape at mach ~20+
-    # Best in this case is the shape that minimizes energy dissipation by the flow i.e., the one
-    # where the engine doesn't have to work as hard to push through the air.
-    #
-    # The work done by the engine to push against the air and gravity is dissipated in hypersonic regimes
-    # by the shock-induced drag/wave drag longer cones would decrease shock-induced drag.
-    # Newtonian estimation of drag coefficient at high mach: 2 sin(theta)^2 / (gamma * M^2).
-    # sin(theta) is then r/(2 * sqrt(r^2 + h^2))
-    # So we minimize Cost = r/(sqrt(r^2 + h^2)) / (gamma * M^2) + Area, wrt height
-    # => r * (-1/2) * (r^2 + h^2) ^ (-3/2) * (2 * h) * 1/(gamma * M^2) + pi * r * h / sqrt(r^2 + h^2) = 0
-    # =>  -(r^2 + h^2) ^ (-1) * 1/(gamma * M^2) + pi = 0
-    # => sqrt((pi * gamma * M^2)^-1 - r^2) = h
-    # say gamma is like 1.2, M is like 20 ish. then
-
-    # payload_area = np.pi * ox_tank_r * np.sqrt(ox_tank_r ** 2 + h ** 2);
