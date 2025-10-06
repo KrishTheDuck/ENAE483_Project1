@@ -67,15 +67,15 @@ class MassRelations:
 
         self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = \
             MassRelations.__get_tank_masses(self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type)
-        
+
             
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = \
             MassRelations.__get_tank_masses(self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type)
 
-    
+
         return 0
 
-            
+
     def __get_tank_masses(self, Masses, E: Engine, ox_type, fuel_type):
         # add n2o4 optimization?
         ox_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
@@ -121,6 +121,7 @@ class MassRelations:
         return ox_tank, ox_insulation, fu_tank, fu_insulation
 
 
+
     @staticmethod
     def __get_propellants(name: str):
         # Split the propellant name into oxidizer and fuel
@@ -163,29 +164,40 @@ class MassRelations:
     def __avionics_mass(M0):
         #Avionics mass as a function of gross mass
         return 10 * M0 ** 0.361
-    
+
     @staticmethod
     def __wiring_mass(M0, TotalLength):
         #Wiring mass as a function of gross mass
         return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
-    
-    def __getPropulsion_Sys_Mass(self, E: Engine, Masses):
+
+    def __getPropulsion_Sys_Mass(self, E: Engine, Masses,n_thruster = (1,1)):
+        #Inputs: Engine class, Masses dict, Stage index (0 or 1)
+
         #M_engine = f(Thrust,Ae,At) Liquid
         #M_casing = f(M_prop) Solid
         #M_thrust_struct = f(Thrust) Both
 
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio: 7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59 #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
-        M_thrust_struct = lambda T: 2.55e-4 * T #kg, MERS slide 27
-        M_gimbals = lambda T,P0: 237.8 * (T/P0)^(0.9375) #kg, MERS slide 28
+        M_thrust_struct = lambda T,N=1: 2.55e-4 * T * N#kg, MERS slide 27
+        M_gimbals = lambda T,P0,N=1: N*(237.8 * (T/P0)**(0.9375)) #kg, MERS slide 28
 
         #todo working on this rn
-        match E.Name:
-            case "SOLID":
-                pass
-            case _:
-                pass
+        PropSysMasses = [
+            {"M_engine": np.nan, "M_casing": np.nan, "M_thrust_struct": np.nan, "M_gimbals": np.nan},
+            {},
+        ]
+        for n in range(0,2):
+            match E.Name:
+                case "SOLID":
+                    M_cas = M_casing(Masses["m_pr"])
+                    M_eng = np.nan
+                case _:
+                    M_cas = np.nan
+                    M_eng = M_engine(E.Fn,E.NozzleRatio,n_thruster[n])
 
+            M_struct = M_thrust_struct(E.Fn,n_thruster[n])
+            M_gimb = M_gimbals(E.Fn,E.p,n_thruster[n])
 
         return M_rocket_engine, M_casing, M_thrust_struct, M_gimbals
