@@ -125,26 +125,38 @@ class MassRelations:
 
         return ox_tank, ox_insulation, fu_tank, fu_insulation
 
-    def __getPropulsion_Sys_Mass(self, E: Engine, Masses):
+    def __getPropulsion_Sys_Mass(self, E: Engine, Masses,n_thruster = (1,1)):
+        #Inputs: Engine class, Masses dict, Stage index (0 or 1)
+
         #M_engine = f(Thrust,Ae,At) Liquid
         #M_casing = f(M_prop) Solid
         #M_thrust_struct = f(Thrust) Both
 
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio: 7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59 #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
-        M_thrust_struct = lambda T: 2.55e-4 * T #kg, MERS slide 27
-        M_gimbals = lambda T,P0: 237.8 * (T/P0)^(0.9375) #kg, MERS slide 28
+        M_thrust_struct = lambda T,N=1: 2.55e-4 * T * N#kg, MERS slide 27
+        M_gimbals = lambda T,P0,N=1: N*(237.8 * (T/P0)**(0.9375)) #kg, MERS slide 28
 
         #todo working on this rn
-        match E.Name:
-            case "SOLID":
-                pass
-            case _:
-                pass
+        PropSysMasses = [
+            {"M_engine": np.nan, "M_casing": np.nan, "M_thrust_struct": np.nan, "M_gimbals": np.nan},
+            {},
+        ]
+        for n in range(0,2):
+            match E.Name:
+                case "SOLID":
+                    M_cas = M_casing(Masses["m_pr"])
+                    M_eng = np.nan
+                case _:
+                    M_cas = np.nan
+                    M_eng = M_engine(E.Fn,E.NozzleRatio,n_thruster[n])
 
+            M_struct = M_thrust_struct(E.Fn,n_thruster[n])
+            M_gimb = M_gimbals(E.Fn,E.p,n_thruster[n])
 
-        return M_rocket_engine, M_casing, M_thrust_struct, M_gimbals
+            PropSysMasses[n] = {"M_engine": M_eng, "M_casing": M_cas, "M_thrust_struct": M_struct, "M_gimbals": M_gimb}
+        return PropSysMasses
 
     # Suppose we have the tanks as spheres here.
     # if ox_tank_r is not np.nan:
