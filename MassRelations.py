@@ -66,7 +66,8 @@ class MassRelations:
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = (
             MassRelations.__get_tank_masses(self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type)
         )
-
+        
+        
 
         
 
@@ -83,11 +84,11 @@ class MassRelations:
 
     def __get_tank_masses(self,Masses, E: Engine, ox_type, fuel_type):
         # add n2o4 optimization?
-        ox_tank_l = (4/(np.pi*self.D_outer^2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
-        fu_tank_l = (4/(np.pi*self.D_outer^2))*(Masses["m_fu"] / E.Density[1]) + (2/3)*self.D_outer #cylindrical tank length
+        ox_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
+        fu_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_fu"] / E.Density[1]) + (2/3)*self.D_outer #cylindrical tank length
 
-        Area_Ox = np.pi * self.D_outer * ox_tank_l + np.pi * self.D_outer ^ 2 #surface area of cylinder + 2 hemispheres
-        Area_Fu = np.pi * self.D_outer * fu_tank_l + np.pi * self.D_outer ^ 2 #surface area of cylinder + 2 hemispheres
+        Area_Ox = np.pi * self.D_outer * ox_tank_l + np.pi * self.D_outer ** 2 #surface area of cylinder + 2 hemispheres
+        Area_Fu = np.pi * self.D_outer * fu_tank_l + np.pi * self.D_outer ** 2 #surface area of cylinder + 2 hemispheres
 
         match ox_type:
             case "LOX":
@@ -125,6 +126,13 @@ class MassRelations:
 
         return ox_tank, ox_insulation, fu_tank, fu_insulation
 
+    def __avionics_mass(self, M0):
+        #Avionics mass as a function of gross mass
+        return 10 * M0 ** 0.361
+    def __wiring_mass(self, M0, TotalLength):
+        #Wiring mass as a function of gross mass
+        return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
+    
     def __getPropulsion_Sys_Mass(self, E: Engine, Masses):
         #M_engine = f(Thrust,Ae,At) Liquid
         #M_casing = f(M_prop) Solid

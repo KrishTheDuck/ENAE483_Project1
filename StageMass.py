@@ -19,6 +19,14 @@ class StageMass:
     Gimbals: float
     Avionics: float
     Wiring: float
+
+@dataclass(frozen=True)
+class RocketMass:
+    """
+    Calculate the mass of each stage of a two-stage rocket.
+    The mass components considered for each stage include:
+    """
+    StageMass : StageMass
     PayloadFairing: float
     InterTankFairing: float
     InterStageFairing: float
