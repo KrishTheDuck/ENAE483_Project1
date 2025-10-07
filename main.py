@@ -47,7 +47,7 @@ def Submission2(Stage1,Stage2):
 
     R = RocketCase(dVtot,mPL,(delta1,delta2),(Stage1,Stage2))
 
-    M = MassRelations.MassRelations(X,R,D_outer)
+    M = MassRelations.MassRelations(X,R,D_outer,n_thruster=(3,1)) #3 engines on S1, 1 on S2
     SM1,SM2 = M.ReturnValues()
 
     print("\n--- Stage 1 Masses (SM1) ---")

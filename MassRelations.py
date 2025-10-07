@@ -37,13 +37,14 @@ class MassRelations:
     def payload_height():
         return 13
 
-    def __init__(self, X, R: RocketCase,D_outer = 4):
+    def __init__(self, X, R: RocketCase,D_outer = 4,n_thruster = (1,1)):
         self.D_outer = D_outer #m, outer diameter of the rocket, assumed constant for both stages
         self.R = R
         self.X = X
         self.payload_diameter = 5.2
         self.payload_height = 13
         self.M1, self.M2 = self.R.findMasses(self.X)
+        self.n_thruster = n_thruster
 
         self.sm1, self.sm2 = StageMass(), StageMass()
 
@@ -73,7 +74,7 @@ class MassRelations:
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation, self.S2Length = \
             self.__get_tank_masses(self.sm2, self.R.engines[1], s2_ox_type, s2_fuel_type)
 
-        self.sm1, self.sm2 = self.__getPropulsion_Sys_Mass(R.engines,(self.sm1,self.sm2),n_thruster=(1,1) )
+        self.sm1, self.sm2 = self.__getPropulsion_Sys_Mass(R.engines,(self.sm1,self.sm2),self.n_thruster)
 
         self.sm2.Avionics = self.__avionics_mass(self.M1["m0"] + self.M2["m0"] + self.R.mPL) #only on S2
         self.sm1.Avionics = 0
@@ -215,7 +216,7 @@ class MassRelations:
         M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 * 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
         M_thrust_struct = lambda T,N=1.0: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
-        M_gimbals = lambda T,P0,N=1.0: N*(237.8 * (T/P0)**(0.9375)) #kg, MERS slide 28
+        M_gimbals = lambda T,P0,N=1.0: (237.8 * (N*T/P0)**(0.9375)) #kg, MERS slide 28
 
 
         for n in range(0,2):
