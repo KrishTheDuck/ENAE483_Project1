@@ -213,7 +213,7 @@ class MassRelations:
         #M_thrust_struct = f(Thrust) Both
 
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 * 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 + 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
         M_thrust_struct = lambda T,N=1.0: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
         M_gimbals = lambda T,P0,N=1.0: (237.8 * (N*T/P0)**(0.9375)) #kg, MERS slide 28

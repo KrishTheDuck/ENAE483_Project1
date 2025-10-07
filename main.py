@@ -73,7 +73,7 @@ def Submission2(Stage1,Stage2):
     thrust2 = Stage2.Fn[1] * 1e6 * n_thruster[1]  # S2: thrust in N
     mass1 = SM1.TotalMass  # kg
     mass2 = SM2.TotalMass  # kg
-    twr1 = thrust1 / (mass1 * g0)
+    twr1 = thrust1 / (mass1+mass2+mPL * g0)
     twr2 = thrust2 / (mass2 * g0)
     print(f"\nStage 1 TWR: {twr1:.2f}")
     print(f"Stage 2 TWR: {twr2:.2f}")
