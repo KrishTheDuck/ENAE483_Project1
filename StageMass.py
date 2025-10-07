@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, asdict
-
+import numpy as np
 
 @dataclass
 class StageMass:
@@ -19,6 +19,19 @@ class StageMass:
     Gimbals: float = 0.0
     Avionics: float = 0.0
     Wiring: float = 0.0
+    
+    
+    @property
+    def TotalMass(self):
+        return np.nansum(np.array([self.PropFu, self.PropOx, self.PropellantTank, self.PropellantTankInsulation,
+                self.OxidizerTank, self.OxidizerTankInsulation, self.Engine, self.ThrustStructure,
+                self.Casing, self.Gimbals, self.Avionics, self.Wiring]))   
+    
+    @property
+    def DryMass(self):
+        return np.nansum(np.array([self.PropellantTank, self.PropellantTankInsulation,
+                self.OxidizerTank, self.OxidizerTankInsulation, self.Engine, self.ThrustStructure,
+                self.Casing, self.Gimbals, self.Avionics, self.Wiring]))  
 
 @dataclass
 class RocketMass:
@@ -31,3 +44,13 @@ class RocketMass:
     InterTankFairing: float
     InterStageFairing: float
     AftFairing: float
+    
+    @property
+    def TotalMass(self):
+        return np.nansum(np.array([self.StageMass.TotalMass, self.PayloadFairing, self.InterTankFairing,
+                self.InterStageFairing, self.AftFairing]))
+        
+    @property
+    def DryMass(self):
+        return np.nansum(np.array([self.StageMass.DryMass, self.PayloadFairing, self.InterTankFairing,
+                self.InterStageFairing, self.AftFairing]))

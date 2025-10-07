@@ -82,11 +82,11 @@ class MassRelations:
 
     def __get_tank_masses(self, SM, E: Engine, ox_type, fuel_type):
         if E.Density[0] != 0:
-            ox_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropOx / E.Density[0]) + (2 / 3) * self.D_outer #cylindrical tank length
+            ox_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropOx / E.Density[0]) + self.D_outer #cylindrical tank length
         else: ox_tank_l = 0; #no oxidizer (solid)
 
         if E.Density[1] != 0:
-            fu_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropFu / E.Density[1]) + (2 / 3) * self.D_outer #cylindrical tank length
+            fu_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropFu / E.Density[1]) + self.D_outer #cylindrical tank length
         else: fu_tank_l = 0; #no fuel -- this shouldnt happen
 
         Area_Ox = np.pi * self.D_outer * ox_tank_l + np.pi * self.D_outer ** 2 #surface area of cylinder + 2 hemispheres
@@ -189,7 +189,7 @@ class MassRelations:
         M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 * 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
         M_thrust_struct = lambda T,N=1.0: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
-        M_gimbals = lambda T,P0,N=1.0: N*(237.8 * (T*1e6/P0)**(0.9375)) #kg, MERS slide 28
+        M_gimbals = lambda T,P0,N=1.0: N*(237.8 * (T/P0)**(0.9375)) #kg, MERS slide 28
 
 
         for n in range(0,2):
