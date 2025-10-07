@@ -3,7 +3,6 @@ import numpy as np
 
 @dataclass
 class StageMass:
-    #All units in kg
     PropFu: float = 0.0 #Propellant Mass
     PropOx : float = 0.0 # Oxidizer Mass (if used)
 
