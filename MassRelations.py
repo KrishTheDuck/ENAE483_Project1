@@ -72,8 +72,7 @@ class MassRelations:
         # ------------------------------------------------------------------
         
         
-        
-        # ---------------------- Fairings, Make the RocketMass Object ---------------------
+        # ---------------------- Fairings Areas ---------------------
         # Aft Fairing
         aft_fairing_area = MassRelations.__aft_fairing_area(self.D_outer, self.D_outer/2) # ALL CAP DIAMETERS ARE EQUAL TO OUTER DIAMETER
         # Intertank (or interstage) Fairing
@@ -82,16 +81,30 @@ class MassRelations:
         # Payload Fairing
         payload_fairing_area = MassRelations.__payload_fairing_area(self.D_outer, self.D_outer/2, self.D_outer/2)
         # -----------------------------------------------------------------------------------
+        
         # ---------------------- Fairing Masses ----------------------
         aft_fairing_mass = MassRelations.__fairing_mass(aft_fairing_area)
         intertank_fairing_mass_stage1 = MassRelations.__fairing_mass(intertank_fairing_area_stage1)
         intertank_fairing_mass_stage2 = MassRelations.__fairing_mass(intertank_fairing_area_stage2)
         payload_fairing_mass = MassRelations.__fairing_mass(payload_fairing_area)
         # ------------------------------------------------------------
-            
+
         # ---------------------- Avionics and Wiring ----------------------
+        M0 = self.sm1.TotalMass + self.sm2.TotalMass + self.R.mPL
+        TotalLength = self.__get_length()[0] + self.__get_length()[1]
+        avionics_mass = MassRelations.__avionics_mass(M0)
+        wiring_mass = MassRelations.__wiring_mass(M0, TotalLength)
+        self.sm2.Avionics = avionics_mass
+        self.sm2.Wiring = wiring_mass
+        # ---------------------------------------------------------------
         
-        # ------- 
+        
+        # ---------------------- Propulsion System Masses ----------------------
+        self.sm1, self.sm2, self.n_thrusters = self.__getPropulsion_Sys_Mass(self.R.engines)
+        
+        # ----------------------------------------------------------------------
+        
+        # ----------------------------------------------------------------- 
         self.rm = RocketMass(StageMass1=self.sm1, StageMass2=self.sm2, PayloadFairing=payload_fairing_mass, InterTankFairing=intertank_fairing_mass_stage1 + intertank_fairing_mass_stage2, 
                         InterStageFairing= 0, AftFairing=aft_fairing_mass)
         
@@ -229,7 +242,6 @@ class MassRelations:
         Masses = [self.sm1, self.sm2]
         m01 = Masses[0].TotalMass + Masses[1].TotalMass + self.R.mPL
         m02 = Masses[1].TotalMass + self.R.mPL
-        
                 
         # Calculate number of engines required given a twr for both stages.
         n_engines_s1 = m01 * 9.81 * self.twr1 / (E[0].Fn[0] * 1e6)  #number of engines on stage 1
