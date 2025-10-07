@@ -33,6 +33,7 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     print(f"  dV fraction in Stage 1 (X): {X_cost:.3g}")
     print(f"  Overall LV mass: {(m1_cost['m0'])/1000:.3g} metric tonnes")
     print(f"  Overall LV cost: ${Costs[0]/1000:.3g} B2025")
+    
     print()
 
     plt.show()
@@ -41,9 +42,9 @@ def Submission2(Stage1, Stage2):
     # PARAMS
     dVtot = 12.3e3  # m/s
     mPL = 26000  # kg
-    delta1 = 0.08
-    delta2 = 0.08
-    X = 0.586  # dV fraction in stage 1
+    delta1 = 0.06
+    delta2 = 0.06
+    X = 0.585  # dV fraction in stage 1
     D_outer = 9  # m, initial guess
     TOL = 1e-3  # 0.1% tolerance for convergence
     mass_margin_frac = 0.5  # 30% mass margin
@@ -158,12 +159,13 @@ def Submission2(Stage1, Stage2):
     stage1_mass = SM1.TotalMass  # kg
     stage2_mass = SM2.TotalMass  # kg
     total_lv_mass = (SM1.TotalMass + SM2.TotalMass + mPL) / 1000  # t
+    
     # Cost calculation (use MinimumCost from Solver)
     R = RocketCase(dVtot, mPL, (delta1, delta2), (Stage1, Stage2))
     Sol = S.Solver(R)
-    X_cost, Costs, (m1_cost, m2_cost), fig_cost = Sol.MinimumCost()
+    X_cost, Costs, (m1_cost, m2_cost), fig_cost = Sol.FindCost(X)
     overall_cost_B2025 = Costs[0] / 1000 if hasattr(Costs, '__getitem__') else float('nan')
-
+    
     print("\n--- Requested Output Summary ---")
     print(f"Propellant mass (total): {propellant_mass_total:.3f} t")
     print(f"Propellant tank mass (total): {tank_mass_total:.3f} t")
@@ -218,6 +220,10 @@ def Submission2(Stage1, Stage2):
         print(f"  Inter Stage Fairing: {getattr(M.rm, 'InterStageFairing', float('nan')):.3f}")
         print(f"  Aft Fairing: {getattr(M.rm, 'AftFairing', float('nan')):.3f}")
     print(f"  Payload: {mPL:.3f}")
+    
+    print(f"{M.rm.DryMass:.3f} kg dry mass")
+    print(f"Number of Thrusters Stage 1: {M.n_thrusters}")
+
 
 if __name__ == "__main__":
     LOX_LCH4  = Engine(3.6, 327, (2.26, 0.745), (2.4, 1.5), (35.16, 10.1), (34.34, 45), (1140,423),"LOX-LCH4")
@@ -226,4 +232,4 @@ if __name__ == "__main__":
     SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
-    Submission2(LOX_LH2,LOX_LH2)
+    Submission2(LOX_LH2,LOX_RP1)

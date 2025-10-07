@@ -51,7 +51,7 @@ class RocketCase:
                "m_in":m_in1,
                "m_pr":m_pr1} #dict with stage 1 mass values
       
-      print("INSIDE FIND MASSES")
+      # print("INSIDE FIND MASSES")
       
       return Mass1,Mass2
 
