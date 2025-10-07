@@ -6,6 +6,8 @@ import MassRelations
 from dataclasses import asdict
 import numpy as np
 
+from StageMass import StageMass, RocketMass
+
 def S2ndStage(Stage1Prop,Stage2Prop):
     #PARAMS
     dVtot = 12.3e3 #in m/s since all the rest of my calculations use base SI units
@@ -59,14 +61,30 @@ def Submission2(Stage1,Stage2):
             print(f"  {attr}: {value:.3g} kg")
         else:
             print(f"  {attr}: {value}")
-
+    
     print("\n--- Stage 2 Masses (SM2) ---")
     for attr, value in asdict(SM2).items():
         if isinstance(value, (int, float)) and not np.isnan(value):
             print(f"  {attr}: {value:.3g} kg")
         else:
             print(f"  {attr}: {value}")
-
+            
+            
+    print("\n--- Rocket Masses (RM) ---")
+    for attr, value in asdict(M.rm).items():
+        if isinstance(value, dict):
+            continue
+        
+        if isinstance(value, (int, float)) and not np.isnan(value):
+            print(f"  {attr}: {value:.3g} kg")
+        else:
+            print(f"  {attr}: {value}")
+          
+    print('\n\n')  
+    print(f"Total Rocket Mass: {M.rm.TotalMass/1e3:.3g} metric tonnes")
+    print(f"Total Rocket Dry Mass: {M.rm.DryMass/1e3:.3g} metric tonnes")
+    print(f"Number of Engines: {int(M.n_thrusters[0]), int(M.n_thrusters[1])}")
+    
     print("\n\n", SM1.DryMass/1e3,SM2.DryMass/1e3)
 
     # # --- Thrust-to-Weight Ratio Sanity Check ---
