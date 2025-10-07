@@ -140,21 +140,48 @@ def Submission2(Stage1, Stage2):
     if not converged:
         print("\nWarning: Did not converge within max iterations.")
 
-    # Final summary
-    print("\n--- Final Design Summary ---")
-    print(f"Total Rocket Mass (with 30% margin): {total_mass/1e3:.3g} metric tonnes")
-    print(f"Stage 1 TWR: {twr_stage_1:.3f}")
-    print(f"Stage 2 TWR: {twr_stage_2:.3f}")
-    print(f"Total L/D: {ld_total:.3f}")
-    print(f"Number of Engines: Stage 1 = {n_engines_1}, Stage 2 = {n_engines_2}")
-    print(f"Stage 1 Length: {S1_length:.3f} m")
-    print(f"Stage 2 Length: {S2_length:.3f} m")
-    print(f"Total Length: {total_length:.3f} m")
-    print(f"Diameter: {D_outer:.3f} m")
-    print(f"Payload: {mPL:.3f} kg")
-    print(f"Mass Margin: {mass_margin:.2%}")
-    print("(Check warnings above for any requirement violations.)")
+    # --- Requested Output Summary ---
+    # Totals for both stages
+    propellant_mass_total = (SM1.PropOx + SM1.PropFu + SM2.PropOx + SM2.PropFu) / 1000  # t
+    tank_mass_total = (SM1.OxidizerTank + SM1.PropellantTank + SM2.OxidizerTank + SM2.PropellantTank) / 1000  # t
+    insulation_total = SM1.OxidizerTankInsulation + SM1.PropellantTankInsulation + SM2.OxidizerTankInsulation + SM2.PropellantTankInsulation  # kg
+    engines_total = SM1.Engine + SM2.Engine  # kg
+    thrust_structure_total = SM1.ThrustStructure + SM2.ThrustStructure  # kg
+    casing_total = SM1.Casing + SM2.Casing  # kg
+    gimbals_total = SM1.Gimbals + SM2.Gimbals  # kg
+    avionics_total = SM1.Avionics + SM2.Avionics  # kg
+    wiring_total = SM1.Wiring + SM2.Wiring  # kg
+    fairing_payload = getattr(M.rm, 'PayloadFairing', float('nan')) if hasattr(M, 'rm') else float('nan')
+    fairing_intertank = getattr(M.rm, 'InterTankFairing', float('nan')) if hasattr(M, 'rm') else float('nan')
+    fairing_interstage = getattr(M.rm, 'InterStageFairing', float('nan')) if hasattr(M, 'rm') else float('nan')
+    fairing_aft = getattr(M.rm, 'AftFairing', float('nan')) if hasattr(M, 'rm') else float('nan')
+    stage1_mass = SM1.TotalMass  # kg
+    stage2_mass = SM2.TotalMass  # kg
+    total_lv_mass = (SM1.TotalMass + SM2.TotalMass + mPL) / 1000  # t
+    # Cost calculation (use MinimumCost from Solver)
+    R = RocketCase(dVtot, mPL, (delta1, delta2), (Stage1, Stage2))
+    Sol = S.Solver(R)
+    X_cost, Costs, (m1_cost, m2_cost), fig_cost = Sol.MinimumCost()
+    overall_cost_B2025 = Costs[0] / 1000 if hasattr(Costs, '__getitem__') else float('nan')
 
+    print("\n--- Requested Output Summary ---")
+    print(f"Propellant mass (total): {propellant_mass_total:.3f} t")
+    print(f"Propellant tank mass (total): {tank_mass_total:.3f} t")
+    print(f"Propellant tank insulation (total): {insulation_total:.1f} kg")
+    print(f"Engines: {engines_total:.1f} kg")
+    print(f"Thrust structure: {thrust_structure_total:.1f} kg")
+    print(f"Casing: {casing_total:.1f} kg")
+    print(f"Gimbals: {gimbals_total:.1f} kg")
+    print(f"Avionics: {avionics_total:.1f} kg")
+    print(f"Wiring: {wiring_total:.1f} kg")
+    print(f"Payload fairing: {fairing_payload:.1f} kg")
+    print(f"Inter-tank fairing: {fairing_intertank:.1f} kg")
+    print(f"Inter-stage fairing: {fairing_interstage:.1f} kg")
+    print(f"Aft fairing: {fairing_aft:.1f} kg")
+    print(f"1st stage mass: {stage1_mass:.1f} kg")
+    print(f"2nd stage mass: {stage2_mass:.1f} kg")
+    print(f"Total LV mass: {total_lv_mass:.3f} t")
+    print(f"Overall cost: ${overall_cost_B2025:.3f} B2025")
     # Detailed mass breakdown (all in kg)
     print("\n--- Mass Breakdown (kg) ---")
     print("Stage 1:")
