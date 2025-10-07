@@ -37,73 +37,160 @@ def S2ndStage(Stage1Prop,Stage2Prop):
 
     plt.show()
 
-def Submission2(Stage1,Stage2):
-    #PARAMS
-    dVtot = 12.3e3 #in m/s since all the rest of my calculations use base SI units
-    mPL = 26000 #kg
+def Submission2(Stage1, Stage2):
+    # PARAMS
+    dVtot = 12.3e3  # m/s
+    mPL = 26000  # kg
     delta1 = 0.08
     delta2 = 0.08
-    #More Params (we guess and check these bish)
-    X = 0.55 #dV fraction in stage 1
-    D_outer = 9 #m, outer diameter of the rocket
-    # n_thruster = (64,16) #number of thruster per stage
+    X = 0.586  # dV fraction in stage 1
+    D_outer = 9  # m, initial guess
+    TOL = 1e-3  # 0.1% tolerance for convergence
+    mass_margin_frac = 0.3  # 30% mass margin
+    max_iter = 100
+    min_ld = 13
+    ld_step = 0.25  # m, increment for diameter if L/D too high
+    max_engines = 100  # safety cap
 
+    converged = False
+    prev_total_mass = None
 
-    R = RocketCase(dVtot,mPL,(delta1,delta2),(Stage1,Stage2))
-    M = MassRelations.MassRelations(X,R,D_outer, 1.3, 0.76) #3 engines on S1, 1 on S2
-    SM1,SM2 = M.ReturnValues()
-    
-    print(M.rm.TotalMass)
+    # Start with minimum engines for each stage
+    n_engines_1 = 1
+    n_engines_2 = 1
 
-    print("\n--- Stage 1 Masses (SM1) ---")
-    for attr, value in asdict(SM1).items():
-        if isinstance(value, (int, float)) and not np.isnan(value):
-            print(f"  {attr}: {value:.3g} kg")
-        else:
-            print(f"  {attr}: {value}")
-    
-    print("\n--- Stage 2 Masses (SM2) ---")
-    for attr, value in asdict(SM2).items():
-        if isinstance(value, (int, float)) and not np.isnan(value):
-            print(f"  {attr}: {value:.3g} kg")
-        else:
-            print(f"  {attr}: {value}")
-            
-            
-    print("\n--- Rocket Masses (RM) ---")
-    for attr, value in asdict(M.rm).items():
-        if isinstance(value, dict):
+    for iteration in range(max_iter):
+        # Calculate required thrust for TWR
+        # We'll iterate n_engines for each stage until TWR is met
+        twr1_met = False
+        twr2_met = False
+        inner_iter = 0
+        while not (twr1_met and twr2_met) and inner_iter < max_iter:
+            # Set up MassRelations with current n_engines
+            # We'll pass TWR requirements to MassRelations, which should use them to set n_thrusters
+            R = RocketCase(dVtot, mPL, (delta1, delta2), (Stage1, Stage2))
+            M = MassRelations.MassRelations(X, R, D_outer, 1.3, 0.76)
+            # Overwrite n_thrusters with our current guess
+            M.n_thrusters = (n_engines_1, n_engines_2)
+            SM1, SM2 = M.ReturnValues()
+
+            # Add 30% mass margin
+            total_mass_nomargin = SM1.TotalMass + SM2.TotalMass + mPL
+            total_mass = total_mass_nomargin * (1 + mass_margin_frac)
+            mass_margin = (total_mass - total_mass_nomargin) / total_mass
+
+            # TWR calculations
+            g0 = 9.81
+            thrust_1 = n_engines_1 * Stage1.Fn[0] * 1e6  # N
+            thrust_2 = n_engines_2 * Stage2.Fn[1] * 1e6  # N
+            twr_stage_1 = thrust_1 / (SM1.TotalMass * g0)
+            twr_stage_2 = thrust_2 / (SM2.TotalMass * g0)
+
+            twr1_met = twr_stage_1 >= 1.3
+            twr2_met = twr_stage_2 >= 0.76
+
+            if not twr1_met:
+                n_engines_1 += 1
+                if n_engines_1 > max_engines:
+                    print("Stage 1: Exceeded max engines, cannot meet TWR requirement.")
+                    break
+            if not twr2_met:
+                n_engines_2 += 1
+                if n_engines_2 > max_engines:
+                    print("Stage 2: Exceeded max engines, cannot meet TWR requirement.")
+                    break
+            inner_iter += 1
+
+        # L/D calculations (total rocket)
+        S1_length = sum(M.S1Length) if hasattr(M, 'S1Length') else float('nan')
+        S2_length = sum(M.S2Length) if hasattr(M, 'S2Length') else float('nan')
+        total_length = S1_length + S2_length
+        ld_total = total_length / D_outer if D_outer else float('nan')
+
+        # Print iteration summary
+        print(f"\nIteration {iteration+1}")
+        print(f"Total Rocket Mass (with 30% margin): {total_mass/1e3:.3g} metric tonnes")
+        print(f"Mass Margin: {mass_margin:.2%}")
+        print(f"Stage 1 TWR: {twr_stage_1:.3f} (Required: >= 1.3)")
+        print(f"Stage 2 TWR: {twr_stage_2:.3f} (Required: >= 0.76)")
+        print(f"Total L/D: {ld_total:.3f} (Required: <= 13)")
+        print(f"Diameter: {D_outer:.3f} m")
+        print(f"Number of Engines: Stage 1 = {n_engines_1}, Stage 2 = {n_engines_2}")
+        if twr_stage_1 < 1.3:
+            print(f"  Warning: Stage 1 TWR below requirement!")
+        if twr_stage_2 < 0.76:
+            print(f"  Warning: Stage 2 TWR below requirement!")
+        if ld_total > min_ld:
+            print(f"  Warning: Total L/D above requirement!")
+
+        # Adjust D_outer if L/D too high
+        if ld_total > min_ld:
+            D_outer += ld_step
             continue
-        
-        if isinstance(value, (int, float)) and not np.isnan(value):
-            print(f"  {attr}: {value:.3g} kg")
-        else:
-            print(f"  {attr}: {value}")
-          
-    print('\n\n')  
-    print(f"Total Rocket Mass: {M.rm.TotalMass/1e3:.3g} metric tonnes")
-    print(f"Total Rocket Dry Mass: {M.rm.DryMass/1e3:.3g} metric tonnes")
-    print(f"Number of Engines: {int(M.n_thrusters[0]), int(M.n_thrusters[1])}")
-    
-    print("\n\n", SM1.DryMass/1e3,SM2.DryMass/1e3)
 
-    # # --- Thrust-to-Weight Ratio Sanity Check ---
-    # g0 = 9.81  # m/s^2
-    # thrust1 = Stage1.Fn[0] * 1e6 * n_thruster[0]  # S1: thrust in N
-    # thrust2 = Stage2.Fn[1] * 1e6 * n_thruster[1]  # S2: thrust in N
-    # mass1 = SM1.TotalMass  # kg
-    # mass2 = SM2.TotalMass  # kg
-    # twr1 = thrust1 / (mass1+mass2+mPL * g0)
-    # twr2 = thrust2 / (mass2 * g0)
-    # print(f"\nStage 1 TWR: {twr1:.2f}")
-    # print(f"Stage 2 TWR: {twr2:.2f}")
-    # if twr1 < 1.3:
-    #     print("ERROR: Thrust-to-weight ratio is below 1.3 for stage 1!")
-    #
-    # if twr2 < 0.76:
-    #     print("ERROR: Thrust-to-weight ratio is below 0.76 for stage 2!")
+        # Check for convergence (mass only, since requirements are enforced above)
+        if prev_total_mass is not None:
+            rel_change = abs(total_mass - prev_total_mass) / prev_total_mass
+            if rel_change < TOL:
+                converged = True
+                print("\nConverged!")
+                break
+        prev_total_mass = total_mass
 
+    if not converged:
+        print("\nWarning: Did not converge within max iterations.")
 
+    # Final summary
+    print("\n--- Final Design Summary ---")
+    print(f"Total Rocket Mass (with 30% margin): {total_mass/1e3:.3g} metric tonnes")
+    print(f"Stage 1 TWR: {twr_stage_1:.3f}")
+    print(f"Stage 2 TWR: {twr_stage_2:.3f}")
+    print(f"Total L/D: {ld_total:.3f}")
+    print(f"Number of Engines: Stage 1 = {n_engines_1}, Stage 2 = {n_engines_2}")
+    print(f"Stage 1 Length: {S1_length:.3f} m")
+    print(f"Stage 2 Length: {S2_length:.3f} m")
+    print(f"Total Length: {total_length:.3f} m")
+    print(f"Diameter: {D_outer:.3f} m")
+    print(f"Payload: {mPL:.3f} kg")
+    print(f"Mass Margin: {mass_margin:.2%}")
+    print("(Check warnings above for any requirement violations.)")
+
+    # Detailed mass breakdown (all in kg)
+    print("\n--- Mass Breakdown (kg) ---")
+    print("Stage 1:")
+    print(f"  Propellant Ox: {SM1.PropOx:.3f}")
+    print(f"  Propellant Fu: {SM1.PropFu:.3f}")
+    print(f"  Oxidizer Tank: {SM1.OxidizerTank:.3f}")
+    print(f"  Propellant Tank: {SM1.PropellantTank:.3f}")
+    print(f"  Oxidizer Tank Insulation: {SM1.OxidizerTankInsulation:.3f}")
+    print(f"  Propellant Tank Insulation: {SM1.PropellantTankInsulation:.3f}")
+    print(f"  Engine: {SM1.Engine:.3f}")
+    print(f"  Thrust Structure: {SM1.ThrustStructure:.3f}")
+    print(f"  Casing: {SM1.Casing:.3f}")
+    print(f"  Gimbals: {SM1.Gimbals:.3f}")
+    print(f"  Avionics: {SM1.Avionics:.3f}")
+    print(f"  Wiring: {SM1.Wiring:.3f}")
+    print("Stage 2:")
+    print(f"  Propellant Ox: {SM2.PropOx:.3f}")
+    print(f"  Propellant Fu: {SM2.PropFu:.3f}")
+    print(f"  Oxidizer Tank: {SM2.OxidizerTank:.3f}")
+    print(f"  Propellant Tank: {SM2.PropellantTank:.3f}")
+    print(f"  Oxidizer Tank Insulation: {SM2.OxidizerTankInsulation:.3f}")
+    print(f"  Propellant Tank Insulation: {SM2.PropellantTankInsulation:.3f}")
+    print(f"  Engine: {SM2.Engine:.3f}")
+    print(f"  Thrust Structure: {SM2.ThrustStructure:.3f}")
+    print(f"  Casing: {SM2.Casing:.3f}")
+    print(f"  Gimbals: {SM2.Gimbals:.3f}")
+    print(f"  Avionics: {SM2.Avionics:.3f}")
+    print(f"  Wiring: {SM2.Wiring:.3f}")
+    # Fairings (from M or M.rm if available)
+    if hasattr(M, 'rm'):
+        print("Fairings:")
+        print(f"  Payload Fairing: {getattr(M.rm, 'PayloadFairing', float('nan')):.3f}")
+        print(f"  Inter Tank Fairing: {getattr(M.rm, 'InterTankFairing', float('nan')):.3f}")
+        print(f"  Inter Stage Fairing: {getattr(M.rm, 'InterStageFairing', float('nan')):.3f}")
+        print(f"  Aft Fairing: {getattr(M.rm, 'AftFairing', float('nan')):.3f}")
+    print(f"  Payload: {mPL:.3f}")
 
 if __name__ == "__main__":
     LOX_LCH4  = Engine(3.6, 327, (2.26, 0.745), (2.4, 1.5), (35.16, 10.1), (34.34, 45), (1140,423),"LOX-LCH4")
@@ -112,4 +199,4 @@ if __name__ == "__main__":
     SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
-    Submission2(LOX_LH2,LOX_LH2)
+    Submission2(LOX_LH2,N2O4_UDMH)
