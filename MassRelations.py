@@ -30,18 +30,19 @@ class MassRelations:
     accommodate the engines. Assume the engines are 3m long
 
     """
-    @property
-    def payload_diameter(self):
-        return 5.2 
-    @property
-    def payload_height(self):
+    @staticmethod
+    def payload_diameter():
+        return 5.2
+    @staticmethod
+    def payload_height():
         return 13
 
     def __init__(self, X, R: RocketCase,D_outer = 4):
         self.D_outer = D_outer #m, outer diameter of the rocket, assumed constant for both stages
         self.R = R
         self.X = X
-
+        self.payload_diameter = 5.2
+        self.payload_height = 13
         self.M1, self.M2 = self.R.findMasses(self.X)
 
         self.sm1, self.sm2 = StageMass(), StageMass()
@@ -65,20 +66,32 @@ class MassRelations:
         s1_ox_type, s1_fuel_type = MassRelations.__get_propellants(R.engines[0].Name)
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
 
-        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = \
+        self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation, self.S1Length= \
             self.__get_tank_masses(self.sm1, self.R.engines[0], s1_ox_type, s1_fuel_type)
 
             
-        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = \
+        self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation, self.S2Length = \
             self.__get_tank_masses(self.sm2, self.R.engines[1], s2_ox_type, s2_fuel_type)
 
         self.sm1, self.sm2 = self.__getPropulsion_Sys_Mass(R.engines,(self.sm1,self.sm2),n_thruster=(1,1) )
 
+        self.sm2.Avionics = self.__avionics_mass(self.M1["m0"] + self.M2["m0"] + self.R.mPL) #only on S2
+        self.sm1.Avionics = 0
+
+
+        Lens = self.__get_length()
+
+        self.sm2.Wiring = self.__wiring_mass(self.M2["m0"] , Lens[1])
+        self.sm1.Wiring = self.__wiring_mass(self.M1["m0"], Lens[0])
     def ReturnValues(self):
         return self.sm1, self.sm2
 
 
 
+    def __get_length(self):
+        S1len = 2.5*self.D_outer + 3 + sum(self.S1Length)
+        S2Len = self.D_outer + self.__payload_fairing_length(self.D_outer)
+        return (S1len, S2Len)
 
     def __get_tank_masses(self, SM, E: Engine, ox_type, fuel_type):
         if E.Density[0] != 0:
@@ -126,7 +139,7 @@ class MassRelations:
             case _:
                 raise ValueError(f'Fuel "{fuel_type}" not found')
 
-        return ox_tank, ox_insulation, fu_tank, fu_insulation
+        return ox_tank, ox_insulation, fu_tank, fu_insulation, (ox_tank_l, fu_tank_l)
 
 
 
@@ -155,14 +168,27 @@ class MassRelations:
         # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
         RocketRadius = max(r_ox,r_f,D_outer/2)
         
-        rc = MassRelations.payload_diameter / 2 # m, radius of the payload
-        h = (r_ox + MassRelations.payload_height)        # m, height of the payload
+        rc = MassRelations.payload_diameter() / 2 # m, radius of the payload
+        h = (r_ox + MassRelations.payload_height())        # m, height of the payload
         
         h1 = (h * rc) / (RocketRadius - rc)
         
         #Assume conical fairing
         return np.pi * D_outer * np.sqrt((D_outer/2)**2 + (h+h1)**2)
-    
+
+    @staticmethod
+    def __payload_fairing_length(D_outer):
+        # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
+        RocketRadius =  D_outer/2
+
+        rc = MassRelations.payload_diameter() / 2  # m, radius of the payload
+        h = (RocketRadius + MassRelations.payload_height())  # m, height of the payload
+
+        h1 = (h * rc) / (RocketRadius - rc)
+        # Assume conical fairing
+        return h1 + h
+
+
     @staticmethod
     def __fairing_mass(area):
         #Fairing mass as a function of area
