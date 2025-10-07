@@ -1,7 +1,7 @@
 from RocketCase import RocketCase
 from Engine import Engine
 import numpy as np
-from StageMass import StageMass,RocketMass
+from StageMass import StageMass,RocketMass  
 
 class MassRelations:
     """
@@ -41,7 +41,7 @@ class MassRelations:
 
         self.sm1, self.sm2 = StageMass(), StageMass()
         self.twr1, self.twr2 = twr1, twr2
-
+        
         # ---------------------- Initialize oxidizer and fuel masses ----------------------
         # Stage 1
         self.sm1.PropOx = self.M1["m_pr"] * (
@@ -63,16 +63,16 @@ class MassRelations:
         s1_ox_type, s1_fuel_type = MassRelations.__get_propellants(R.engines[0].Name)
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
         # -----------------------------------------------------------------------------------
-
+        
         # ---------------------- Find the tank masses, dimensions ----------------------
         self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation, self.S1Length= \
             self.__get_tank_masses(self.sm1, self.R.engines[0], s1_ox_type, s1_fuel_type)
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation, self.S2Length = \
             self.__get_tank_masses(self.sm2, self.R.engines[1], s2_ox_type, s2_fuel_type)
         # ------------------------------------------------------------------
-
-
-
+        
+        
+        
         # ---------------------- Fairings, Make the RocketMass Object ---------------------
         # Aft Fairing
         aft_fairing_area = MassRelations.__aft_fairing_area(self.D_outer, self.D_outer/2) # ALL CAP DIAMETERS ARE EQUAL TO OUTER DIAMETER
@@ -88,15 +88,19 @@ class MassRelations:
         intertank_fairing_mass_stage2 = MassRelations.__fairing_mass(intertank_fairing_area_stage2)
         payload_fairing_mass = MassRelations.__fairing_mass(payload_fairing_area)
         # ------------------------------------------------------------
-        self.rm = RocketMass(StageMass1=self.sm1, StageMass2=self.sm2, PayloadFairing=payload_fairing_mass, InterTankFairing=intertank_fairing_mass_stage1 + intertank_fairing_mass_stage2,
+            
+        # ---------------------- Avionics and Wiring ----------------------
+        
+        # ------- 
+        self.rm = RocketMass(StageMass1=self.sm1, StageMass2=self.sm2, PayloadFairing=payload_fairing_mass, InterTankFairing=intertank_fairing_mass_stage1 + intertank_fairing_mass_stage2, 
                         InterStageFairing= 0, AftFairing=aft_fairing_mass)
-
-
-
-
+        
+        
+        
+    
     def ReturnValues(self):
         return self.sm1, self.sm2
-
+    
     def __get_length(self):
         S1len = 2.5*self.D_outer + 3 + sum(self.S1Length)
         S2Len = self.D_outer + self.__payload_fairing_length(self.D_outer)
@@ -184,7 +188,7 @@ class MassRelations:
         
         #Assume conical fairing
         return np.pi * D_outer * np.sqrt((D_outer/2)**2 + (h+h1)**2)
-
+    
     @staticmethod
     def __payload_fairing_length(D_outer):
         # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
@@ -225,8 +229,8 @@ class MassRelations:
         Masses = [self.sm1, self.sm2]
         m01 = Masses[0].TotalMass + Masses[1].TotalMass + self.R.mPL
         m02 = Masses[1].TotalMass + self.R.mPL
-
-
+        
+                
         # Calculate number of engines required given a twr for both stages.
         n_engines_s1 = m01 * 9.81 * self.twr1 / (E[0].Fn[0] * 1e6)  #number of engines on stage 1
         n_engines_s2 = m02 * 9.81 * self.twr2 / (E[1].Fn[1] * 1e6)  #number of engines on stage 2
@@ -234,7 +238,7 @@ class MassRelations:
         n_thruster = (np.ceil(n_engines_s1), np.ceil(n_engines_s2))
         
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 + 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N: (7.81e-4 * N*T*1e6 * 3.37e-5 * N*T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
         M_thrust_struct = lambda T,N: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
         M_gimbals = lambda T,P0,N: (237.8 * (N*T/P0)**(0.9375)) #kg, MERS slide 28
