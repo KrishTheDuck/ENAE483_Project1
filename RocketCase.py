@@ -41,7 +41,7 @@ class RocketCase:
                "m_pr":m_pr2} #dict with stage 2 mass values
       #Stage 1 Calcs
       r1 = math.exp(-dV1/(g*ISP1))
-      
+
       #Mass Calcs Stage 1
       m01 = m02 / (r1-self.deltas[0]) #we use m02 at the payload mass for stage 1
       m_in1 = m01*self.deltas[0]

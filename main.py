@@ -2,6 +2,9 @@ from Engine import Engine
 from RocketCase import RocketCase
 import matplotlib.pyplot as plt
 import Solver as S
+import MassRelations
+from dataclasses import asdict
+import numpy as np
 
 def S2ndStage(Stage1Prop,Stage2Prop):
     #PARAMS
@@ -32,6 +35,36 @@ def S2ndStage(Stage1Prop,Stage2Prop):
 
     plt.show()
 
+def Submission2(Stage1,Stage2):
+    #PARAMS
+    dVtot = 12.3e3 #in m/s since all the rest of my calculations use base SI units
+    mPL = 26000 #kg
+    delta1 = 0.08
+    delta2 = 0.08
+    #More Params (we guess and check these bish)
+    X = 0.2 #dV fraction in stage 1
+    D_outer = 4 #m, outer diameter of the rocket
+
+
+    R = RocketCase(dVtot,mPL,(delta1,delta2),(Stage1,Stage2))
+
+    M = MassRelations.MassRelations(X,R,D_outer)
+    SM1,SM2 = M.ReturnValues()
+
+    print("\n--- Stage 1 Masses (SM1) ---")
+    for attr, value in asdict(SM1).items():
+        if isinstance(value, (int, float)) and not np.isnan(value):
+            print(f"  {attr}: {value:.3g} kg")
+        else:
+            print(f"  {attr}: {value}")
+
+    print("\n--- Stage 2 Masses (SM2) ---")
+    for attr, value in asdict(SM2).items():
+        if isinstance(value, (int, float)) and not np.isnan(value):
+            print(f"  {attr}: {value:.3g} kg")
+        else:
+            print(f"  {attr}: {value}")
+
 
 if __name__ == "__main__":
     LOX_LCH4  = Engine(3.6, 327, (2.26, 0.745), (2.4, 1.5), (35.16, 10.1), (34.34, 45), (1140,423),"LOX-LCH4")
@@ -40,14 +73,4 @@ if __name__ == "__main__":
     SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
-    #Example workflow for generating required plots for a Storable second stage
-    #UDMH: Mika
-    #Lox_LCH4: Eric
-    #Lox_RP1: Krish
-    #Lox_LH2: Maanav
-    #Solid: Sid
-    Stage1Props = [LOX_LCH4,LOX_LH2,LOX_RP1,SOLID,N2O4_UDMH]
-    Stage2Prop = N2O4_UDMH
-    for i in Stage1Props:
-        S2ndStage(i,Stage2Prop)
-        #todo Solver function also provides stats for cost and mass plots however currently they are not being used. Modify this for the actual submission I reckon.
+    Submission2(SOLID,N2O4_UDMH)

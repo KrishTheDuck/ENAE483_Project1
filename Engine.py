@@ -7,7 +7,7 @@ class Engine:
     Isp          - Specific Impulse
     
     --- The following are indexed w.r.t the stage i.e. stage1 is 0 stage2 is 1 ----
-    Fn           - Thrust
+    Fn           - Thrust (Mn)
     Ae           - Nozzle Exhaust Area
     p            - Stagnation Pressure / Chamber Pressure
     NozzleRatio  - Nozzle Expansion Ratio

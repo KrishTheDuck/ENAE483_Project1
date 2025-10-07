@@ -44,7 +44,7 @@ class MassRelations:
 
         self.M1, self.M2 = self.R.findMasses(self.X)
 
-        self.sm1, self.sm2 = StageMass, StageMass
+        self.sm1, self.sm2 = StageMass(), StageMass()
 
         # Stage 1
         self.sm1.PropOx = self.M1["m_pr"] * (
@@ -66,31 +66,39 @@ class MassRelations:
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
 
         self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation = \
-            MassRelations.__get_tank_masses(self.M1, self.R.engines[0], s1_ox_type, s1_fuel_type)
+            self.__get_tank_masses(self.sm1, self.R.engines[0], s1_ox_type, s1_fuel_type)
 
             
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation = \
-            MassRelations.__get_tank_masses(self.M2, self.R.engines[1], s2_ox_type, s2_fuel_type)
+            self.__get_tank_masses(self.sm2, self.R.engines[1], s2_ox_type, s2_fuel_type)
+
+        self.sm1, self.sm2 = self.__getPropulsion_Sys_Mass(R.engines,(self.sm1,self.sm2),n_thruster=(1,1) )
+
+    def ReturnValues(self):
+        return self.sm1, self.sm2
 
 
-        return 0
 
 
-    def __get_tank_masses(self, Masses, E: Engine, ox_type, fuel_type):
-        # add n2o4 optimization?
-        ox_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_ox"] / E.Density[0]) + (2/3)*self.D_outer #cylindrical tank length
-        fu_tank_l = (4/(np.pi*self.D_outer**2))*(Masses["m_fu"] / E.Density[1]) + (2/3)*self.D_outer #cylindrical tank length
+    def __get_tank_masses(self, SM, E: Engine, ox_type, fuel_type):
+        if E.Density[0] != 0:
+            ox_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropOx / E.Density[0]) + (2 / 3) * self.D_outer #cylindrical tank length
+        else: ox_tank_l = 0; #no oxidizer (solid)
+
+        if E.Density[1] != 0:
+            fu_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropFu / E.Density[1]) + (2 / 3) * self.D_outer #cylindrical tank length
+        else: fu_tank_l = 0; #no fuel -- this shouldnt happen
 
         Area_Ox = np.pi * self.D_outer * ox_tank_l + np.pi * self.D_outer ** 2 #surface area of cylinder + 2 hemispheres
         Area_Fu = np.pi * self.D_outer * fu_tank_l + np.pi * self.D_outer ** 2 #surface area of cylinder + 2 hemispheres
 
         match ox_type:
             case "LOX":
-                ox_tank = 0.0107 * Masses["m_ox"]
+                ox_tank = 0.0107 * SM.PropOx
                 ox_insulation = 1.123 * Area_Ox #from MERS slides -- only for LOX
             case "N2O4":
                 #Hypergolic case -- annoying a fx of Prop volume not tank area
-                ox_tank = 12.16*(Masses["m_ox"] / E.Density[0])  #MERS slide 7
+                ox_tank = 12.16*(SM.PropOx / E.Density[0])  #MERS slide 7
                 ox_insulation = np.nan
             case None:
                 #Solid only
@@ -101,19 +109,19 @@ class MassRelations:
 
         match fuel_type:
             case "LH2":
-                fu_tank = 0.128 * Masses["m_fu"] #why this formula? Do we want to consider Ti or COPV tanks?
+                fu_tank = 0.128 * SM.PropFu #why this formula? Do we want to consider Ti or COPV tanks?
                 fu_insulation = 2.880 * Area_Fu
             case "RP1":
-                fu_tank = 0.0148 * Masses["m_fu"]
+                fu_tank = 0.0148 * SM.PropFu
                 fu_insulation = np.nan
             case "LCH4":
-                fu_tank = 0.0287 * Masses["m_fu"]
+                fu_tank = 0.0287 * SM.PropFu
                 fu_insulation = 1.123 * Area_Fu
-            case "Solid":
-                fu_tank = Masses["m_fu"] * 0.135
+            case "SOLID":
+                fu_tank = SM.PropFu * 0.135
                 fu_insulation = np.nan
             case "UDMH":
-                fu_tank = 12.16*(Masses["m_fu"] / E.Density[1])  #MERS slide 7
+                fu_tank = 12.16*(SM.PropFu / E.Density[1])  #MERS slide 7
                 fu_insulation = np.nan
             case _:
                 raise ValueError(f'Fuel "{fuel_type}" not found')
@@ -170,7 +178,7 @@ class MassRelations:
         #Wiring mass as a function of gross mass
         return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
 
-    def __getPropulsion_Sys_Mass(self, E: Engine, Masses,n_thruster = (1,1)):
+    def __getPropulsion_Sys_Mass(self, E =(Engine,Engine) , Masses = (StageMass,StageMass),n_thruster = (1,1)):
         #Inputs: Engine class, Masses dict, Stage index (0 or 1)
 
         #M_engine = f(Thrust,Ae,At) Liquid
@@ -178,26 +186,22 @@ class MassRelations:
         #M_thrust_struct = f(Thrust) Both
 
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T * 3.37e-5 * T * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 * 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
-        M_thrust_struct = lambda T,N=1: 2.55e-4 * T * N#kg, MERS slide 27
-        M_gimbals = lambda T,P0,N=1: N*(237.8 * (T/P0)**(0.9375)) #kg, MERS slide 28
+        M_thrust_struct = lambda T,N=1.0: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
+        M_gimbals = lambda T,P0,N=1.0: N*(237.8 * (T*1e6/P0)**(0.9375)) #kg, MERS slide 28
 
-        #todo working on this rn
-        PropSysMasses = [
-            {"M_engine": np.nan, "M_casing": np.nan, "M_thrust_struct": np.nan, "M_gimbals": np.nan},
-            {},
-        ]
+
         for n in range(0,2):
-            match E.Name:
+            match E[n].Name:
                 case "SOLID":
-                    M_cas = M_casing(Masses["m_pr"])
-                    M_eng = np.nan
+                    Masses[n].Casing = M_casing(Masses[n].PropFu)
+                    Masses[n].Engine = np.nan
                 case _:
-                    M_cas = np.nan
-                    M_eng = M_engine(E.Fn,E.NozzleRatio,n_thruster[n])
+                    Masses[n].Casing = np.nan
+                    Masses[n].Engine = M_engine(E[n].Fn[n],E[n].NozzleRatio[n],n_thruster[n])
 
-            M_struct = M_thrust_struct(E.Fn,n_thruster[n])
-            M_gimb = M_gimbals(E.Fn,E.p,n_thruster[n])
+            Masses[n].ThrustStructure = M_thrust_struct(E[n].Fn[n],n_thruster[n])
+            Masses[n].Gimbals = M_gimbals(E[n].Fn[n],E[n].p[n],n_thruster[n])
 
-        return M_rocket_engine, M_casing, M_thrust_struct, M_gimbals
+        return Masses[0],Masses[1]
