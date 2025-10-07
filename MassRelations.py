@@ -91,11 +91,14 @@ class MassRelations:
 
         # ---------------------- Avionics and Wiring ----------------------
         M0 = self.sm1.TotalMass + self.sm2.TotalMass + self.R.mPL
-        TotalLength = self.__get_length()[0] + self.__get_length()[1]
         avionics_mass = MassRelations.__avionics_mass(M0)
-        wiring_mass = MassRelations.__wiring_mass(M0, TotalLength)
+        wiring_mass_s1 = MassRelations.__wiring_mass(M0, self.__get_length()[0])
+        wiring_mass_s2 = MassRelations.__wiring_mass(M0, self.__get_length()[1])
+        
         self.sm2.Avionics = avionics_mass
-        self.sm2.Wiring = wiring_mass
+        
+        self.sm1.Wiring = wiring_mass_s1
+        self.sm2.Wiring = wiring_mass_s2
         # ---------------------------------------------------------------
         
         
