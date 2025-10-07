@@ -46,7 +46,7 @@ def Submission2(Stage1, Stage2):
     X = 0.586  # dV fraction in stage 1
     D_outer = 9  # m, initial guess
     TOL = 1e-3  # 0.1% tolerance for convergence
-    mass_margin_frac = 0.3  # 30% mass margin
+    mass_margin_frac = 0.5  # 30% mass margin
     max_iter = 100
     min_ld = 13
     ld_step = 0.25  # m, increment for diameter if L/D too high
@@ -199,4 +199,4 @@ if __name__ == "__main__":
     SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
-    Submission2(LOX_LH2,N2O4_UDMH)
+    Submission2(LOX_LH2,LOX_LH2)
