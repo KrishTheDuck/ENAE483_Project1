@@ -30,6 +30,7 @@ class RocketCase:
       #Stage 2 Calcs
       r2 = math.exp(-dV2/(g*ISP2))
       lambda2 = r2 - self.deltas[1]
+      
 
       #Mass Calcs Stage 2
       m02 = self.mPL / (r2-self.deltas[1])
@@ -49,6 +50,9 @@ class RocketCase:
       Mass1 = {"m0":m01,
                "m_in":m_in1,
                "m_pr":m_pr1} #dict with stage 1 mass values
+      
+      print("INSIDE FIND MASSES")
+      
       return Mass1,Mass2
 
     def MassTrends(self, X):

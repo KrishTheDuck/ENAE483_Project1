@@ -42,16 +42,13 @@ def Submission2(Stage1,Stage2):
     delta1 = 0.08
     delta2 = 0.08
     #More Params (we guess and check these bish)
-    X = 0.5 #dV fraction in stage 1
-    D_outer = 15 #m, outer diameter of the rocket
-
+    X = 0.55 #dV fraction in stage 1
+    D_outer = 9 #m, outer diameter of the rocket
 
     R = RocketCase(dVtot,mPL,(delta1,delta2),(Stage1,Stage2))
 
     M = MassRelations.MassRelations(X,R,D_outer)
     SM1,SM2 = M.ReturnValues()
-
-
 
     print("\n--- Stage 1 Masses (SM1) ---")
     for attr, value in asdict(SM1).items():
@@ -67,6 +64,7 @@ def Submission2(Stage1,Stage2):
         else:
             print(f"  {attr}: {value}")
 
+    print(SM1.DryMass/1e3,SM2.DryMass/1e3)
 
 if __name__ == "__main__":
     LOX_LCH4  = Engine(3.6, 327, (2.26, 0.745), (2.4, 1.5), (35.16, 10.1), (34.34, 45), (1140,423),"LOX-LCH4")
