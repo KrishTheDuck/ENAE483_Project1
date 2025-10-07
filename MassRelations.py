@@ -104,9 +104,10 @@ class MassRelations:
         
         # ----------------------------------------------------------------------
         
-        # ----------------------------------------------------------------- 
+        # -----------------------------------------------------------------
+        InterStageMass = self.__fairing_mass(self.__interstage_fairing_area(self.D_outer/2, self.D_outer/2, self.D_outer + 3))
         self.rm = RocketMass(StageMass1=self.sm1, StageMass2=self.sm2, PayloadFairing=payload_fairing_mass, InterTankFairing=intertank_fairing_mass_stage1 + intertank_fairing_mass_stage2, 
-                        InterStageFairing= 0, AftFairing=aft_fairing_mass)
+                        InterStageFairing= InterStageMass, AftFairing=aft_fairing_mass)
         
         
         
