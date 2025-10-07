@@ -44,10 +44,11 @@ def Submission2(Stage1,Stage2):
     #More Params (we guess and check these bish)
     X = 0.55 #dV fraction in stage 1
     D_outer = 9 #m, outer diameter of the rocket
+    n_thruster = (64,16) #number of thruster per stage
+
 
     R = RocketCase(dVtot,mPL,(delta1,delta2),(Stage1,Stage2))
-
-    M = MassRelations.MassRelations(X,R,D_outer,n_thruster=(3,1)) #3 engines on S1, 1 on S2
+    M = MassRelations.MassRelations(X,R,D_outer,n_thruster) #3 engines on S1, 1 on S2
     SM1,SM2 = M.ReturnValues()
 
     print("\n--- Stage 1 Masses (SM1) ---")
@@ -68,8 +69,8 @@ def Submission2(Stage1,Stage2):
 
     # --- Thrust-to-Weight Ratio Sanity Check ---
     g0 = 9.81  # m/s^2
-    thrust1 = Stage1.Fn[0] * 1e6 * 3  # S1: thrust in N
-    thrust2 = Stage2.Fn[1] * 1e6 * 1  # S2: thrust in N
+    thrust1 = Stage1.Fn[0] * 1e6 * n_thruster[0]  # S1: thrust in N
+    thrust2 = Stage2.Fn[1] * 1e6 * n_thruster[1]  # S2: thrust in N
     mass1 = SM1.TotalMass  # kg
     mass2 = SM2.TotalMass  # kg
     twr1 = thrust1 / (mass1 * g0)
