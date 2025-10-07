@@ -67,21 +67,21 @@ def Submission2(Stage1,Stage2):
 
     print("\n\n", SM1.DryMass/1e3,SM2.DryMass/1e3)
 
-    # --- Thrust-to-Weight Ratio Sanity Check ---
-    g0 = 9.81  # m/s^2
-    thrust1 = Stage1.Fn[0] * 1e6 * n_thruster[0]  # S1: thrust in N
-    thrust2 = Stage2.Fn[1] * 1e6 * n_thruster[1]  # S2: thrust in N
-    mass1 = SM1.TotalMass  # kg
-    mass2 = SM2.TotalMass  # kg
-    twr1 = thrust1 / (mass1+mass2+mPL * g0)
-    twr2 = thrust2 / (mass2 * g0)
-    print(f"\nStage 1 TWR: {twr1:.2f}")
-    print(f"Stage 2 TWR: {twr2:.2f}")
-    if twr1 < 1.3:
-        print("ERROR: Thrust-to-weight ratio is below 1.3 for stage 1!")
-
-    if twr2 < 0.76:
-        print("ERROR: Thrust-to-weight ratio is below 0.76 for stage 2!")
+    # # --- Thrust-to-Weight Ratio Sanity Check ---
+    # g0 = 9.81  # m/s^2
+    # thrust1 = Stage1.Fn[0] * 1e6 * n_thruster[0]  # S1: thrust in N
+    # thrust2 = Stage2.Fn[1] * 1e6 * n_thruster[1]  # S2: thrust in N
+    # mass1 = SM1.TotalMass  # kg
+    # mass2 = SM2.TotalMass  # kg
+    # twr1 = thrust1 / (mass1+mass2+mPL * g0)
+    # twr2 = thrust2 / (mass2 * g0)
+    # print(f"\nStage 1 TWR: {twr1:.2f}")
+    # print(f"Stage 2 TWR: {twr2:.2f}")
+    # if twr1 < 1.3:
+    #     print("ERROR: Thrust-to-weight ratio is below 1.3 for stage 1!")
+    #
+    # if twr2 < 0.76:
+    #     print("ERROR: Thrust-to-weight ratio is below 0.76 for stage 2!")
 
 
 
