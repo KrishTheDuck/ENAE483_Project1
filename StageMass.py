@@ -38,7 +38,8 @@ class RocketMass:
     Calculate the mass of each stage of a two-stage rocket.
     The mass components considered for each stage include:
     """
-    StageMass : StageMass
+    StageMass1 : StageMass
+    StageMass2 : StageMass
     PayloadFairing: float
     InterTankFairing: float
     InterStageFairing: float
@@ -46,10 +47,10 @@ class RocketMass:
     
     @property
     def TotalMass(self):
-        return np.nansum(np.array([self.StageMass.TotalMass, self.PayloadFairing, self.InterTankFairing,
+        return np.nansum(np.array([self.StageMass1.TotalMass, self.StageMass2.TotalMass, self.PayloadFairing, self.InterTankFairing,
                 self.InterStageFairing, self.AftFairing]))
         
     @property
     def DryMass(self):
-        return np.nansum(np.array([self.StageMass.DryMass, self.PayloadFairing, self.InterTankFairing,
+        return np.nansum(np.array([self.StageMass1.DryMass, self.StageMass2.DryMass, self.PayloadFairing, self.InterTankFairing,
                 self.InterStageFairing, self.AftFairing]))

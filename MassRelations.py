@@ -1,8 +1,7 @@
 from RocketCase import RocketCase
 from Engine import Engine
 import numpy as np
-from StageMass import StageMass
-
+from StageMass import StageMass,RocketMass
 
 class MassRelations:
     """
@@ -32,17 +31,18 @@ class MassRelations:
     """
     payload_diameter = 5.2
     payload_height = 13
-
+    
     def __init__(self, X, R: RocketCase, D_outer: float, twr1, twr2):
         self.D_outer = D_outer # m, outer diameter of the rocket, assumed constant for both stages
         self.R = R
         self.X = X
-
+        
         self.M1, self.M2 = self.R.findMasses(self.X)
 
         self.sm1, self.sm2 = StageMass(), StageMass()
         self.twr1, self.twr2 = twr1, twr2
 
+        # ---------------------- Initialize oxidizer and fuel masses ----------------------
         # Stage 1
         self.sm1.PropOx = self.M1["m_pr"] * (
             self.R.engines[0].FMMR / (self.R.engines[0].FMMR + 1)
@@ -58,30 +58,44 @@ class MassRelations:
         self.sm2.PropFu = self.M2["m_pr"] * (
             1 / (self.R.engines[1].FMMR + 1)
         )  # fuel mass
-
+        # -----------------------------------------------------------------------------------
+        # ---------------------- Get the propellant types from the name ---------------------
         s1_ox_type, s1_fuel_type = MassRelations.__get_propellants(R.engines[0].Name)
         s2_ox_type, s2_fuel_type = MassRelations.__get_propellants(R.engines[1].Name)
+        # -----------------------------------------------------------------------------------
 
+        # ---------------------- Find the tank masses, dimensions ----------------------
         self.sm1.OxidizerTank, self.sm1.OxidizerTankInsulation, self.sm1.PropellantTank, self.sm1.PropellantTankInsulation, self.S1Length= \
             self.__get_tank_masses(self.sm1, self.R.engines[0], s1_ox_type, s1_fuel_type)
-
-            
         self.sm2.OxidizerTank, self.sm2.OxidizerTankInsulation, self.sm2.PropellantTank, self.sm2.PropellantTankInsulation, self.S2Length = \
             self.__get_tank_masses(self.sm2, self.R.engines[1], s2_ox_type, s2_fuel_type)
+        # ------------------------------------------------------------------
 
-        self.sm1, self.sm2, self.n_thrusters = self.__getPropulsion_Sys_Mass(R.engines,(self.sm1,self.sm2))
 
-        self.sm2.Avionics = self.__avionics_mass(self.M1["m0"] + self.M2["m0"] + self.R.mPL) #only on S2
-        self.sm1.Avionics = 0
 
-        Lens = self.__get_length()
+        # ---------------------- Fairings, Make the RocketMass Object ---------------------
+        # Aft Fairing
+        aft_fairing_area = MassRelations.__aft_fairing_area(self.D_outer, self.D_outer/2) # ALL CAP DIAMETERS ARE EQUAL TO OUTER DIAMETER
+        # Intertank (or interstage) Fairing
+        intertank_fairing_area_stage1 = MassRelations.__interstage_fairing_area(self.D_outer/2, self.D_outer/2, self.S1Length[0] + self.S1Length[1])
+        intertank_fairing_area_stage2 = MassRelations.__interstage_fairing_area(self.D_outer/2, self.D_outer/2, self.S2Length[0] + self.S2Length[1])
+        # Payload Fairing
+        payload_fairing_area = MassRelations.__payload_fairing_area(self.D_outer, self.D_outer/2, self.D_outer/2)
+        # -----------------------------------------------------------------------------------
+        # ---------------------- Fairing Masses ----------------------
+        aft_fairing_mass = MassRelations.__fairing_mass(aft_fairing_area)
+        intertank_fairing_mass_stage1 = MassRelations.__fairing_mass(intertank_fairing_area_stage1)
+        intertank_fairing_mass_stage2 = MassRelations.__fairing_mass(intertank_fairing_area_stage2)
+        payload_fairing_mass = MassRelations.__fairing_mass(payload_fairing_area)
+        # ------------------------------------------------------------
+        self.rm = RocketMass(StageMass1=self.sm1, StageMass2=self.sm2, PayloadFairing=payload_fairing_mass, InterTankFairing=intertank_fairing_mass_stage1 + intertank_fairing_mass_stage2,
+                        InterStageFairing= 0, AftFairing=aft_fairing_mass)
 
-        self.sm2.Wiring = self.__wiring_mass(self.M2["m0"] , Lens[1])
-        self.sm1.Wiring = self.__wiring_mass(self.M1["m0"], Lens[0])
+
+
+
     def ReturnValues(self):
         return self.sm1, self.sm2
-
-
 
     def __get_length(self):
         S1len = 2.5*self.D_outer + 3 + sum(self.S1Length)
@@ -199,25 +213,26 @@ class MassRelations:
         #Wiring mass as a function of gross mass
         return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
 
-    def __getPropulsion_Sys_Mass(self, E =(Engine,Engine) , Masses = (StageMass,StageMass)):
+    def __getPropulsion_Sys_Mass(self, E =(Engine,Engine)):
         #Inputs: Engine class, Masses dict, Stage index (0 or 1)
 
         #M_engine = f(Thrust,Ae,At) Liquid
         #M_casing = f(M_prop) Solid
         #M_thrust_struct = f(Thrust) Both
 
-        # Calculate Engines required.
+        # Calculate Engines required. 
         # first stage carries literally everything.
-
+        Masses = [self.sm1, self.sm2]
         m01 = Masses[0].TotalMass + Masses[1].TotalMass + self.R.mPL
         m02 = Masses[1].TotalMass + self.R.mPL
+
 
         # Calculate number of engines required given a twr for both stages.
         n_engines_s1 = m01 * 9.81 * self.twr1 / (E[0].Fn[0] * 1e6)  #number of engines on stage 1
         n_engines_s2 = m02 * 9.81 * self.twr2 / (E[1].Fn[1] * 1e6)  #number of engines on stage 2
-
+        
         n_thruster = (np.ceil(n_engines_s1), np.ceil(n_engines_s2))
-
+        
         #Lambda functions for the mass relations
         M_engine = lambda T,NozzleRatio,N=1: N*(7.81e-4 * T*1e6 + 3.37e-5 * T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
