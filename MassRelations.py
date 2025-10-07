@@ -250,7 +250,7 @@ class MassRelations:
         n_thruster = (np.ceil(n_engines_s1), np.ceil(n_engines_s2))
         
         #Lambda functions for the mass relations
-        M_engine = lambda T,NozzleRatio,N: (7.81e-4 * N*T*1e6 * 3.37e-5 * N*T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
+        M_engine = lambda T,NozzleRatio,N: (7.81e-4 * N*T*1e6 + 3.37e-5 * N*T*1e6 * np.sqrt(NozzleRatio) + 59) #kg, MERS slide 27
         M_casing = lambda M_prop: 0.135*M_prop #kg, MERS slide 27 -- SOLID ONLY
         M_thrust_struct = lambda T,N: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
         M_gimbals = lambda T,P0,N: (237.8 * (N*T/P0)**(0.9375)) #kg, MERS slide 28
