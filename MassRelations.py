@@ -116,14 +116,23 @@ class MassRelations:
         
     
     def ReturnValues(self):
+        """
+        Returns the StageMass objects for both stages.
+        """
         return self.sm1, self.sm2
     
     def __get_length(self):
+        """
+        Returns the lengths of both stages.
+        """
         S1len = 2.5*self.D_outer + 3 + sum(self.S1Length)
         S2Len = self.D_outer + self.__payload_fairing_length(self.D_outer)
         return (S1len, S2Len)
 
     def __get_tank_masses(self, SM, E: Engine, ox_type, fuel_type):
+        """
+        Returns the tank masses and insulation masses for a given stage.
+        """
         if E.Density[0] != 0:
             ox_tank_l = (4/(np.pi*self.D_outer**2)) * (SM.PropOx / E.Density[0]) + self.D_outer #cylindrical tank length
         else: ox_tank_l = 0; #no oxidizer (solid)
@@ -175,6 +184,9 @@ class MassRelations:
 
     @staticmethod
     def __get_propellants(name: str):
+        """
+        Returns the oxidizer and fuel types from the engine name.
+        """
         # Split the propellant name into oxidizer and fuel
         if "-" in name:
             oxidizer, fuel = name.split("-", 1)
@@ -185,16 +197,25 @@ class MassRelations:
 
     @staticmethod
     def __aft_fairing_area(D_outer, r_f):
+        """
+        Returns the area of the aft fairing.
+        """
         #Assume cylinder fairing
         return np.pi * D_outer * (r_f + 3) #3m for engine length
 
     @staticmethod
     def __interstage_fairing_area(r1, r2, h):
+        """
+        Returns the area of the interstage fairing.
+        """
         #Assume frustrum fairing
         return np.pi * (r1 + r2) * np.sqrt((r1-r2)** 2 + h**2)
 
     @staticmethod
     def __payload_fairing_area(D_outer, r_ox, r_f):
+        """
+        Returns the area of the payload fairing.
+        """
         # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
         RocketRadius = max(r_ox,r_f,D_outer/2)
         
@@ -208,6 +229,9 @@ class MassRelations:
     
     @staticmethod
     def __payload_fairing_length(D_outer):
+        """
+        Returns the length of the payload fairing.
+        """
         # Max diameter of tanks. First pass we set the diameter, second pass we change tank sizes
         RocketRadius =  D_outer/2
 
@@ -221,20 +245,32 @@ class MassRelations:
 
     @staticmethod
     def __fairing_mass(area):
+        """
+        Returns the mass of a fairing given its area.
+        """
         #Fairing mass as a function of area
         return 4.95 * area ** 1.15
     
     @staticmethod
     def __avionics_mass(M0):
+        """
+        Returns the avionics mass given the gross mass.
+        """
         #Avionics mass as a function of gross mass
         return 10 * M0 ** 0.361
 
     @staticmethod
     def __wiring_mass(M0, TotalLength):
+        """
+        Returns the wiring mass given the gross mass and total length of the stage.
+        """
         #Wiring mass as a function of gross mass
         return 1.058 * np.sqrt(M0) * TotalLength ** 0.25
 
     def __getPropulsion_Sys_Mass(self, E =(Engine,Engine)):
+        """
+        Returns the propulsion system masses for both stages.
+        """
         #Inputs: Engine class, Masses dict, Stage index (0 or 1)
 
         #M_engine = f(Thrust,Ae,At) Liquid
@@ -259,6 +295,7 @@ class MassRelations:
         M_thrust_struct = lambda T,N: 2.55e-4 * T*1e6 * N#kg, MERS slide 27
         M_gimbals = lambda T,P0,N: (237.8 * (N*T/P0)**(0.9375)) #kg, MERS slide 28
 
+        # Fill the stages with the masses using a match case for solid vs liquid propellants
         for n in range(0,2):
             match E[n].Name:
                 case "SOLID":
@@ -271,4 +308,5 @@ class MassRelations:
             Masses[n].ThrustStructure = M_thrust_struct(E[n].Fn[n],n_thruster[n])
             Masses[n].Gimbals = M_gimbals(E[n].Fn[n],E[n].p[n],n_thruster[n])
 
+        # Also return the numberof thrusters for each stage.
         return Masses[0],Masses[1], n_thruster

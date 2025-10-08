@@ -5,12 +5,18 @@ import matplotlib.ticker as ticker
 #first stage delta V fraction vs mass
 
 class Solver:
+  """
+  Solver class to find minimum mass and cost for a two-stage rocket.
+  Uses a RocketCase object to perform calculations and generate plots.
+  """
   def __init__(self, RocketCase):
     self.Rocket = RocketCase
-    self.X = np.linspace(0.01,0.99,1500) #1%->99% with 1% intervals for the X split
+    self.X = np.linspace(0.01,0.99,15000) #1%->99% with 1% intervals for the X split
 
   def MinimumMass(self):
-  #Finds the minimum mass solution and returns the X split value and the mass(es), additionally it creates a pretty plot
+    """
+    Finds the minimum mass solution and returns the X split value and the mass(es), additionally it creates a pretty plot
+    """
     X,m0s,StageMasses = self.Rocket.MassTrends(self.X)
     minIndex = np.nanargmin(m0s)
     m0s = [m / 1000 for m in m0s]
@@ -31,6 +37,9 @@ class Solver:
     return X[minIndex],m0s[minIndex],(StageMasses[0][minIndex],StageMasses[1][minIndex]),fig
 
   def FindCost(self, X_val):
+    """
+    Finds the cost at a specific dV fraction and returns the X split value and the cost.
+    """
     # find the nearest index
     X,Costs = self.Rocket.CostTrends(self.X)
     minIndex = (np.abs(self.X - X_val)).argmin()
@@ -68,7 +77,9 @@ class Solver:
 
 
   def MinimumCost(self):
-    #finds the minimum cost solution and returns the X split value and the cost, additionally it creates a pretty plot
+    """
+    Finds the minimum cost solution and returns the X split value and the cost, additionally it creates a pretty plot
+    """
     X,Costs = self.Rocket.CostTrends(self.X)
     minIndex = np.nanargmin(Costs["Total"])
     m1,m2 = self.Rocket.findMasses(X[minIndex]) #gets masses at minimum. prolly useful

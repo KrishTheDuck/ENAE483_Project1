@@ -3,6 +3,10 @@ import numpy as np
 
 @dataclass
 class StageMass:
+    """
+    Calculate the mass of a rocket stage.
+    Contains various mass components and computes total and dry mass.
+    """
     PropFu: float = 0.0 #Propellant Mass
     PropOx : float = 0.0 # Oxidizer Mass (if used)
 
@@ -22,12 +26,18 @@ class StageMass:
     
     @property
     def TotalMass(self):
+        """
+        Total mass of the stage including propellant.
+        """
         return np.nansum(np.array([self.PropFu, self.PropOx, self.PropellantTank, self.PropellantTankInsulation,
                 self.OxidizerTank, self.OxidizerTankInsulation, self.Engine, self.ThrustStructure,
                 self.Casing, self.Gimbals, self.Avionics, self.Wiring]))   
     
     @property
     def DryMass(self):
+        """
+        Dry mass of the stage excluding propellant.
+        """
         return np.nansum(np.array([self.PropellantTank, self.PropellantTankInsulation,
                 self.OxidizerTank, self.OxidizerTankInsulation, self.Engine, self.ThrustStructure,
                 self.Casing, self.Gimbals, self.Avionics, self.Wiring]))  
@@ -36,7 +46,7 @@ class StageMass:
 class RocketMass:
     """
     Calculate the mass of each stage of a two-stage rocket.
-    The mass components considered for each stage include:
+    Contains 2 StageMass objects and fairing masses.
     """
     StageMass1 : StageMass
     StageMass2 : StageMass
@@ -47,10 +57,16 @@ class RocketMass:
     
     @property
     def TotalMass(self):
+        """
+        Total mass of the rocket including all stages and fairings.
+        """
         return np.nansum(np.array([self.StageMass1.TotalMass, self.StageMass2.TotalMass, self.PayloadFairing, self.InterTankFairing,
                 self.InterStageFairing, self.AftFairing]))
         
     @property
     def DryMass(self):
+        """
+        Dry mass of the rocket excluding wet mass (propellant/oxidizer masses).
+        """
         return np.nansum(np.array([self.StageMass1.DryMass, self.StageMass2.DryMass, self.PayloadFairing, self.InterTankFairing,
                 self.InterStageFairing, self.AftFairing]))
