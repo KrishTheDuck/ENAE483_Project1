@@ -33,13 +33,12 @@ def S2ndStage(Stage1Prop,Stage2Prop):
     print(f"  dV fraction in Stage 1 (X): {X_cost:.3g}")
     print(f"  Overall LV mass: {(m1_cost['m0'])/1000:.3g} metric tonnes")
     print(f"  Overall LV cost: ${Costs[0]/1000:.3g} B2025")
-    
     print()
 
     plt.show()
 
 def Submission2(Stage1, Stage2):
-    # PARAMS
+    # PARAMS (ALTER AS NEEDED)
     dVtot = 12.3e3  # m/s
     mPL = 26000  # kg
     delta1 = 0.06
@@ -106,6 +105,7 @@ def Submission2(Stage1, Stage2):
         S1_length = sum(M.S1Length) if hasattr(M, 'S1Length') else float('nan')
         S2_length = sum(M.S2Length) if hasattr(M, 'S2Length') else float('nan')
         total_length = S1_length + S2_length
+        
         ld_total = total_length / D_outer if D_outer else float('nan')
 
         # Print iteration summary
@@ -117,6 +117,7 @@ def Submission2(Stage1, Stage2):
         print(f"Total L/D: {ld_total:.3f} (Required: <= 13)")
         print(f"Diameter: {D_outer:.3f} m")
         print(f"Number of Engines: Stage 1 = {n_engines_1}, Stage 2 = {n_engines_2}")
+        print(f"Lengths: stage 1: {S1_length}, stage 2: {S2_length}, total: {total_length}, diameter: {ld_total}")
         if twr_stage_1 < 1.3:
             print(f"  Warning: Stage 1 TWR below requirement!")
         if twr_stage_2 < 0.76:
@@ -232,4 +233,5 @@ if __name__ == "__main__":
     SOLID     = Engine(1, 269, (4.5, 2.94), (6.6, 2.34), (10.5, 5), (16, 56), (0,1680),"SOLID")
     N2O4_UDMH = Engine(2.67, 285, (1.75, 0.067), (1.5, 1.13), (15.7, 14.7), (26.2, 81.3), (1442,781),"N2O4-UDMH")
 
-    Submission2(LOX_LH2,LOX_RP1)
+    # Example submission runs
+    Submission2(LOX_LH2, LOX_LH2)
